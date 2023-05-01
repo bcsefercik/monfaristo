@@ -29,8 +29,11 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+APPS = [
+    'monfaristo.transaction',
+]
 
-INSTALLED_APPS = [
+DEFAULT_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+INSTALLED_APPS = APPS + DEFAULT_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -49,7 +54,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'monfaristo.urls'
+ROOT_URLCONF = 'monfaristo.settings.urls'
 
 TEMPLATES = [
     {
@@ -67,7 +72,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'monfaristo.wsgi.application'
+WSGI_APPLICATION = 'monfaristo.settings.wsgi.application'
 
 
 # Database
@@ -76,7 +81,7 @@ WSGI_APPLICATION = 'monfaristo.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, '..', 'db', 'db.sqlite3'),
     }
 }
 
