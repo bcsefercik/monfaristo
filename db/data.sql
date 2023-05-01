@@ -1,0 +1,12 @@
+BEGIN TRANSACTION;
+INSERT INTO "ticker" ("id","title","code","market") VALUES (1,'Virgin Galactic Holdings, Inc.','SPCE','NYSE');
+INSERT INTO "broker" ("id","title","url","description") VALUES (2,'Midas','http://getmidas.com','');
+INSERT INTO "broker" ("id","title","url","description") VALUES (3,'Yapı Kredi','http://www.yapikredi.com.tr','');
+INSERT INTO "broker" ("id","title","url","description") VALUES (4,'Binance','http://binance.com','');
+INSERT INTO "broker" ("id","title","url","description") VALUES (5,'Paribu','http://paribu.com','');
+INSERT INTO "broker" ("id","title","url","description") VALUES (6,'Icrypex','http://icrypex.com','');
+INSERT INTO "currency" ("id","title","code") VALUES (1,'Turkish Lira','TRY');
+INSERT INTO "currency" ("id","title","code") VALUES (2,'US Dollar','USD');
+INSERT INTO "currency" ("id","title","code") VALUES (3,'Gold','AUD');
+INSERT INTO "currency" ("id","title","code") VALUES (4,'Euro','EUR');
+COMMIT;

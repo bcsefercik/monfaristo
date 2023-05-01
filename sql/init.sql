@@ -40,7 +40,7 @@ CREATE TABLE `broker` (
     `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     `title` VARCHAR(255) NOT NULL,
     `url` VARCHAR(255) NOT NULL,
-    `description` TEXT
+    `description` TEXT DEFAULT NULL
 );
 
 CREATE TABLE `currency` (
