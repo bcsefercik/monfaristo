@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from monfaristo.transaction.models import Transaction
+from monfaristo.journal.models import Transaction
 
 
 class TransactionAdmin(admin.ModelAdmin):

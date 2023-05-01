@@ -30,7 +30,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 APPS = [
-    'monfaristo.transaction',
+    'monfaristo.journal',
 ]
 
 DEFAULT_APPS = [

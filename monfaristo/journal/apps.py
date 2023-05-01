@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class TransactionConfig(AppConfig):
+class JournalConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "monfaristo.transaction"
+    name = "monfaristo.journal"
