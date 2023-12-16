@@ -19,9 +19,9 @@ class Platform(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(255), index=True)
+    description: Mapped[Optional[str]] = mapped_column()
     url: Mapped[Optional[str]] = mapped_column()
     logo_url: Mapped[Optional[str]] = mapped_column()
-    description: Mapped[Optional[str]] = mapped_column()
 
 
 class Market(Base):
