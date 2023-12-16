@@ -1,22 +1,19 @@
 import datetime
+from typing import Optional
 
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
-
-from settings.database import Base
+from models import TimeStampedBase
+from sqlalchemy.orm import Mapped, mapped_column
 
 
-class User(Base):
+class User(TimeStampedBase):
     __tablename__ = "user"
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    modified_at = Column(
-        DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column()
+    first_name: Mapped[Optional[str]] = mapped_column()
+    last_name: Mapped[Optional[str]] = mapped_column()
+    is_active: Mapped[bool] = mapped_column(default=True)
+    last_login_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow
     )
-    last_login_at = Column(DateTime, default=datetime.datetime.utcnow)

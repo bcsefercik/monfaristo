@@ -1,17 +1,17 @@
 import sys
-
-# sys.path.append("..")
-
-from fastapi import Depends, HTTPException, status, APIRouter
-from pydantic import BaseModel
+from datetime import datetime, timedelta
 from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from models.user import User
 from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from settings.database import SessionLocal, engine
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from datetime import datetime, timedelta
-from jose import jwt, JWTError
+from sqlalchemy.orm import Session
+
+# sys.path.append("..")
 
 
 SECRET_KEY = "KlgH6AzYDeZeGwD288to79I3vTHT8wp7"
@@ -27,7 +27,7 @@ class CreateUser(BaseModel):
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
 router = APIRouter(
@@ -87,7 +87,11 @@ async def get_current_user(token: str = Depends(oauth2_bearer)):
 
 
 @router.post("/create/user")
-async def create_new_user(create_user: CreateUser, db: Session = Depends(get_db)):
+async def create_new_user(
+    create_user: CreateUser,
+    # user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     create_user_model = User()
     create_user_model.email = create_user.email
     create_user_model.first_name = create_user.first_name
@@ -106,12 +110,13 @@ async def create_new_user(create_user: CreateUser, db: Session = Depends(get_db)
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
+    print("bcs")
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise token_exception()
     token_expires = timedelta(days=20)
-    token = create_access_token(user.username, user.id, expires_delta=token_expires)
-    return {"token": token}
+    token = create_access_token(user.email, user.id, expires_delta=token_expires)
+    return {"access_token": token, "token_type": "bearer"}
 
 
 # Exceptions

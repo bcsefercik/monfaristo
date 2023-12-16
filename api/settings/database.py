@@ -1,6 +1,7 @@
+import datetime
+
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///../db/db.sqlite3"
 
@@ -18,4 +19,17 @@ engine = create_engine(
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
+
+
+class TimeStampedBase(Base):
+    __abstract__ = True
+
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow
+    )
+    modified_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
+    )
