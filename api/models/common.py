@@ -11,6 +11,7 @@ class Currency(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(255), index=True)
     code: Mapped[str] = mapped_column(String(255), index=True)
+    symbol: Mapped[Optional[str]] = mapped_column(String(32), index=True)
 
 
 class Platform(Base):
@@ -34,12 +35,12 @@ class Market(Base):
     description: Mapped[Optional[str]] = mapped_column()
 
 
-class Symbol(Base):
-    __tablename__ = "symbol"
+class Asset(Base):
+    __tablename__ = "asset"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(index=True)
-    code: Mapped[str] = mapped_column(String(50), index=True)
+    ticker: Mapped[str] = mapped_column(String(50), index=True)
     market_id: Mapped[int] = mapped_column(ForeignKey("market.id"))
     market: Mapped["Market"] = relationship()
     is_active: Mapped[bool] = mapped_column(default=True, index=True)
