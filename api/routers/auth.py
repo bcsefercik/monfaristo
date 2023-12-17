@@ -27,11 +27,11 @@ class CreateUser(BaseModel):
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="user/token")
 
 
 router = APIRouter(
-    prefix="/auth", tags=["auth"], responses={401: {"user": "Not authorized"}}
+    prefix="/user", tags=["user"], responses={401: {"user": "Not authorized"}}
 )
 
 
@@ -86,7 +86,7 @@ async def get_current_user(token: str = Depends(oauth2_bearer)):
         raise get_user_exception()
 
 
-@router.post("/create/user")
+@router.post("/create")
 async def create_new_user(
     create_user: CreateUser,
     # user: dict = Depends(get_current_user),
@@ -110,7 +110,6 @@ async def create_new_user(
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
-    print("bcs")
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise token_exception()
