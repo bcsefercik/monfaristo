@@ -10,7 +10,7 @@ class Currency(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(255), index=True)
-    code: Mapped[str] = mapped_column(String(255), index=True, unique=True)
+    code: Mapped[str] = mapped_column(String(50), index=True, unique=True)
     symbol: Mapped[Optional[str]] = mapped_column(String(32), index=True)
 
 
