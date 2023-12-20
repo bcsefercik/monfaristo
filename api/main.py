@@ -1,6 +1,6 @@
 import models
 from fastapi import Depends, FastAPI
-from routers import auth, common
+from routers import auth, common, journal
 from settings.database import engine
 
 app = FastAPI()
@@ -9,3 +9,4 @@ models.Base.metadata.create_all(bind=engine)
 
 app.include_router(auth.router)
 app.include_router(common.router)
+app.include_router(journal.router)
