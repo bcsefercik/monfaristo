@@ -4,18 +4,9 @@ from fastapi import APIRouter, Depends
 from models.common import Currency, Market, Platform, Ticker
 from pydantic import BaseModel, Field
 from routers.auth import get_current_user
-from settings.database import SessionLocal
+from settings.database import SessionLocal, get_db
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
-
-
-def get_db():
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
-
 
 router = APIRouter(
     prefix="", tags=["common"], responses={401: {"user": "Not authorized"}}
