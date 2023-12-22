@@ -105,10 +105,9 @@ class CumulativeTickerHolding(TimeStampedBase):
                 - transaction.price * transaction.count
             ) / (self.count - transaction.count)
 
-            self.realized_pnl += (transaction.price * transaction.count) - (
-                self.avg_cost * transaction.count
-            )
+            self.realized_pnl += (transaction.price - self.avg_cost) * transaction.count
 
+            # do following updates at the end
             self.count -= transaction.count
             self.total_sells += transaction.count
 
