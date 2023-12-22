@@ -17,8 +17,11 @@ response = requests.post(
     },
 )
 
+USER_ID = None
+
 if response.ok:
-    print(f"{response.status_code}: User created successfully")
+    USER_ID = response.json()["id"]
+    print(f"{response.status_code}: User (ID: {USER_ID}) created successfully")
 
 # get token
 response = requests.post(
@@ -26,10 +29,25 @@ response = requests.post(
     data={"username": EMAIL, "password": PASSWORD},
 )
 
-ACCESS_TOKEN = response.json()["access_token"] if response.ok else None
+ACCESS_TOKEN = response.json().get("access_token")
 
 print(f"{response.status_code}: ACCESS_TOKEN: {ACCESS_TOKEN}")
 
+
+# create accounts
+ACCOUNTS = [
+    {"title": "Long term", "owner_id": USER_ID},
+    {"title": "Short term", "owner_id": USER_ID},
+]
+
+for account in ACCOUNTS:
+    response = requests.post(
+        API_URL + "journal/account",
+        json=account,
+        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
+    )
+    if response.ok:
+        print(f"{response.status_code}: {account['title']} created successfully")
 
 # create currencies
 CURRENCIES = [

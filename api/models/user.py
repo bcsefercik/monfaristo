@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from models import TimeStampedBase
 from settings.database import Base
-from sqlalchemy import Enum, ForeignKey
+from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -29,6 +29,7 @@ class User(TimeStampedBase):
     scopes: Mapped[List["UserScope"]] = relationship(
         secondary="user_has_scope", back_populates="users"
     )
+    accounts: Mapped[List["Account"]] = relationship("Account", back_populates="owner")
 
 
 class UserScope(Base):
@@ -54,4 +55,14 @@ class UserHasScope(TimeStampedBase):
         ForeignKey("user_permission.id"), index=True, primary_key=True
     )
     permission: Mapped[UserScope] = relationship()
+    is_active: Mapped[bool] = mapped_column(default=True, index=True)
+
+
+class Account(TimeStampedBase):
+    __tablename__ = "account"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String, index=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    owner: Mapped["User"] = relationship(back_populates="accounts")
     is_active: Mapped[bool] = mapped_column(default=True, index=True)

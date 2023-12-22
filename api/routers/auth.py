@@ -96,6 +96,9 @@ async def create_new_user(
 
     db.add(create_user_model)
     db.commit()
+    db.refresh(create_user_model)
+
+    return create_user_model
 
 
 @router.post("/token")
