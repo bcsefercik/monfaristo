@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 from models.user import User
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from settings.database import SessionLocal, engine
+from settings.database import SessionLocal, engine, get_db
 from sqlalchemy.orm import Session
 
 # sys.path.append("..")
@@ -33,14 +33,6 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="user/token")
 router = APIRouter(
     prefix="/user", tags=["user"], responses={401: {"user": "Not authorized"}}
 )
-
-
-def get_db():
-    try:
-        db = SessionLocal()
-        yield db
-    finally:
-        db.close()
 
 
 def get_password_hash(password):
