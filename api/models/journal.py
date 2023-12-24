@@ -6,10 +6,9 @@ import ipdb
 from models import Base, TimeStampedBase
 from models.common import LiquidAsset, Platform, Ticker
 from models.user import Account, User
-from requests import Session
 from settings.database import SessionLocal, get_db, get_or_create
 from sqlalchemy import Enum, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 
 class Transaction(Base):

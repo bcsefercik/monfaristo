@@ -1,7 +1,15 @@
+import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Response, status
-from models.common import Currency, LiquidAsset, Market, Platform, Ticker
+from models.common import (
+    Currency,
+    LiquidAsset,
+    LiquidAssetTransaction,
+    Market,
+    Platform,
+    Ticker,
+)
 from pydantic import BaseModel, Field
 from requests import get
 from routers.auth import get_current_user
@@ -302,3 +310,40 @@ async def create_liquid_asset(
     response.status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
 
     return created_liquid_asset
+
+
+class LiquidAssetTransactionCreateModel(BaseModel):
+    liquid_asset_id: int = Field(gt=0)
+    amount: float = Field(gt=0)
+    type: LiquidAssetTransaction.Type = Field(
+        default=LiquidAssetTransaction.Type.DEPOSIT
+    )
+    executed_at: datetime.datetime = Field(default=datetime.datetime.utcnow)
+
+
+@router.post("/liquid_asset/transaction")
+async def create_liquid_asset_transaction(
+    liquid_asset_transaction: LiquidAssetTransactionCreateModel,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    with db.begin():
+        liquid_asset = (
+            db.query(LiquidAsset)
+            .filter(LiquidAsset.id == liquid_asset_transaction.liquid_asset_id)
+            .first()
+        )
+
+        created_liquid_asset_transaction = LiquidAssetTransaction(
+            **liquid_asset_transaction.model_dump(), liquid_asset=liquid_asset
+        )
+
+        db.add(created_liquid_asset_transaction)
+
+        liquid_asset.add_transaction(db, created_liquid_asset_transaction)
+
+        db.commit()
+        db.refresh(created_liquid_asset_transaction)
+        db.refresh(liquid_asset)
+
+    return created_liquid_asset_transaction
