@@ -1,15 +1,18 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends
-from models.common import Currency, Market, Platform, Ticker
+from fastapi import APIRouter, Depends, Response, status
+from models.common import Currency, LiquidAsset, Market, Platform, Ticker
 from pydantic import BaseModel, Field
+from requests import get
 from routers.auth import get_current_user
-from settings.database import SessionLocal, get_db
-from sqlalchemy import or_
+from settings.database import SessionLocal, get_db, get_or_create
+from sqlalchemy import null, or_
 from sqlalchemy.orm import Session
 
 router = APIRouter(
-    prefix="", tags=["common"], responses={401: {"user": "Not authorized"}}
+    prefix="",
+    tags=["common"],
+    responses={status.HTTP_401_UNAUTHORIZED: {"user": "Not authorized"}},
 )
 
 
@@ -273,3 +276,29 @@ async def delete_ticker(
         .filter(Ticker.code == ticker_code, Ticker.market_id == market.id)
         .delete()
     )
+
+
+class LiquidAssetCreateModel(BaseModel):
+    title: str = Field(null=False, empty=False)
+    currency_id: int = Field(gt=0)
+    owner_id: int = Field(gt=0)
+
+
+@router.post("/liquid_asset")
+async def create_liquid_asset(
+    liquid_asset: LiquidAssetCreateModel,
+    response: Response,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    liquid_asset_dict = liquid_asset.model_dump()
+    liquid_asset_dict["account_id"] = None
+
+    created_liquid_asset, created = get_or_create(db, LiquidAsset, **liquid_asset_dict)
+
+    db.commit()
+    db.refresh(created_liquid_asset)
+
+    response.status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+
+    return created_liquid_asset

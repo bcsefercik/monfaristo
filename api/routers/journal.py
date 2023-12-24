@@ -103,30 +103,29 @@ async def create_transaction(
     # TODO: if user is admin, permit them to override executed_by_id
     if candidate_transaction["executed_by_id"] is None:
         candidate_transaction["executed_by_id"] = user["id"]
-
-    cumulative_ticker_holding = (
-        db.query(CumulativeTickerHolding)
-        .filter(CumulativeTickerHolding.ticker_id == Transaction.ticker_id)
-        .filter(CumulativeTickerHolding.account_id == Transaction.account_id)
-        .filter(CumulativeTickerHolding.is_completed == False)
-        .first()
-    )
-
-    if cumulative_ticker_holding is None:
-        cumulative_ticker_holding = CumulativeTickerHolding(
-            ticker_id=candidate_transaction["ticker_id"],
-            account_id=candidate_transaction["account_id"],
+    with db.begin():
+        cumulative_ticker_holding = (
+            db.query(CumulativeTickerHolding)
+            .filter(CumulativeTickerHolding.ticker_id == Transaction.ticker_id)
+            .filter(CumulativeTickerHolding.account_id == Transaction.account_id)
+            .filter(CumulativeTickerHolding.is_completed == False)
+            .first()
         )
-        db.add(cumulative_ticker_holding)
-        db.commit()
-        db.refresh(cumulative_ticker_holding)
 
-    created_transaction = Transaction(**candidate_transaction)
-    db.add(created_transaction)
-    db.commit()
+        if cumulative_ticker_holding is None:
+            cumulative_ticker_holding = CumulativeTickerHolding(
+                ticker_id=candidate_transaction["ticker_id"],
+                account_id=candidate_transaction["account_id"],
+            )
+            db.add(cumulative_ticker_holding)
+            db.flush()
+            db.refresh(cumulative_ticker_holding)
 
-    cumulative_ticker_holding.add_transaction(created_transaction)
-    db.commit()
+        created_transaction = Transaction(**candidate_transaction)
+        db.add(created_transaction)
+        db.flush()
+
+        cumulative_ticker_holding.add_transaction(db, created_transaction)
 
     db.refresh(created_transaction)
     db.refresh(cumulative_ticker_holding)
