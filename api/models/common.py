@@ -1,7 +1,10 @@
+import enum
 from typing import Optional
 
 from models import Base
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from models.user import Account, User
+from settings.database import TimeStampedBase
+from sqlalchemy import Enum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -35,7 +38,7 @@ class Market(Base):
     description: Mapped[Optional[str]] = mapped_column()
 
     __table_args__ = (
-        UniqueConstraint("code", "currency_id", name="_code_currency_uc"),
+        UniqueConstraint("code", "currency_id", name="_market__code_currency_uc"),
     )
 
 
@@ -50,3 +53,31 @@ class Ticker(Base):
     is_active: Mapped[bool] = mapped_column(default=True, index=True)
     url: Mapped[Optional[str]] = mapped_column()
     logo_url: Mapped[Optional[str]] = mapped_column()
+
+
+class LiquidAsset(TimeStampedBase):
+    __tablename__ = "liquid_asset"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    title: Mapped[Optional[str]] = mapped_column(
+        String, index=True, default=None, nullable=True
+    )
+    amount: Mapped[float] = mapped_column(default=0)
+    currency_id: Mapped[int] = mapped_column(ForeignKey("currency.id"), index=True)
+    currency: Mapped["Currency"] = relationship()
+    owner_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
+    owner: Mapped["User"] = relationship()
+    account_id: Mapped[int] = mapped_column(
+        ForeignKey("account.id"), index=True, nullable=True, default=None
+    )  # account_id can be null for non-account assets
+    account: Mapped["Account"] = relationship()
+
+    __table_args__ = (
+        UniqueConstraint(
+            "title",
+            "currency_id",
+            "owner_id",
+            "account_id",
+            name="_liquid_asset__title_currency_owner_account_uc",
+        ),
+    )

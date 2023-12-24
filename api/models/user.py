@@ -1,11 +1,20 @@
+from __future__ import annotations
+
 import datetime
 import enum
 from typing import List, Optional
 
 from models import TimeStampedBase
 from settings.database import Base
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import Column, Enum, ForeignKey, String, Table
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+user_has_scope = Table(
+    "user_has_scope",
+    Base.metadata,
+    Column("user_id", ForeignKey("user.id")),
+    Column("user_scope_id", ForeignKey("user_scope.id")),
+)
 
 
 class User(TimeStampedBase):
@@ -33,7 +42,7 @@ class User(TimeStampedBase):
 
 
 class UserScope(Base):
-    __tablename__ = "user_permission"
+    __tablename__ = "user_scope"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     code: Mapped[str] = mapped_column(unique=True, index=True)
@@ -41,21 +50,6 @@ class UserScope(Base):
     users: Mapped[List["User"]] = relationship(
         secondary="user_has_scope", back_populates="scopes"
     )
-
-
-class UserHasScope(TimeStampedBase):
-    __tablename__ = "user_has_scope"
-
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("user.id"), index=True, primary_key=True
-    )
-    user: Mapped[User] = relationship()
-    permission_id: Mapped[int] = mapped_column(
-        ForeignKey("user_permission.id"), index=True, primary_key=True
-    )
-    permission: Mapped[UserScope] = relationship()
-    is_active: Mapped[bool] = mapped_column(default=True, index=True)
 
 
 class Account(TimeStampedBase):

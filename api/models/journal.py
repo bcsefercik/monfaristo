@@ -4,9 +4,10 @@ from typing import Optional
 
 import ipdb
 from models import Base, TimeStampedBase
-from models.common import Platform, Ticker
+from models.common import LiquidAsset, Platform, Ticker
 from models.user import Account, User
-from settings.database import SessionLocal, get_db
+from requests import Session
+from settings.database import SessionLocal, get_db, get_or_create
 from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -76,12 +77,21 @@ class CumulativeTickerHolding(TimeStampedBase):
     realized_pnl: Mapped[float] = mapped_column(default=0)
     is_completed: Mapped[bool] = mapped_column(default=False, index=True)
 
-    def add_transaction(self, transaction: Transaction) -> bool:
+    def add_transaction(self, session: Session, transaction: Transaction) -> bool:
         if not (
             self.ticker_id == transaction.ticker_id
             and self.account_id == transaction.account_id
         ):
             return False
+
+        liquid_asset = get_or_create(
+            session,
+            LiquidAsset,
+            currency_id=self.ticker.market.currency_id,
+            owner_id=self.account.owner_id,
+            account_id=self.account_id,
+        )
+        session.flush()
 
         if transaction.type == Transaction.Type.BUY:
             self.avg_cost = (
@@ -91,6 +101,10 @@ class CumulativeTickerHolding(TimeStampedBase):
                 self.count * self.adjusted_avg_cost
                 + transaction.price * transaction.count
             ) / (self.count + transaction.count)
+
+            # update asset
+            liquid_asset.amount -= transaction.price * transaction.count
+            liquid_asset.amount -= transaction.commission
 
             # do following updates at the end
             self.count += transaction.count
@@ -107,11 +121,17 @@ class CumulativeTickerHolding(TimeStampedBase):
 
             self.realized_pnl += (transaction.price - self.avg_cost) * transaction.count
 
+            # update asset
+            liquid_asset.amount += transaction.price * transaction.count
+            liquid_asset.amount -= transaction.commission
+
             # do following updates at the end
             self.count -= transaction.count
             self.total_sells += transaction.count
 
         if self.count == 0:
             self.is_completed = True
+
+        session.flush()
 
         return True
