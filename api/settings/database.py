@@ -1,4 +1,5 @@
 import datetime
+from typing import Tuple
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
@@ -28,20 +29,6 @@ def get_db():
         db.close()
 
 
-
-
-def get_or_create(session, model, **kwargs):
-    instance = session.query(model).filter_by(**kwargs).one_or_none()
-    if instance:
-        return instance
-    else:
-        instance = model(**kwargs)
-        session.add(instance)
-        session.flush()
-        session.refresh(instance)
-        return instance
-
-
 class Base(DeclarativeBase):
     pass
 
@@ -55,3 +42,16 @@ class TimeStampedBase(Base):
     modified_at: Mapped[datetime.datetime] = mapped_column(
         default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
     )
+
+
+def get_or_create(session, model, **kwargs) -> Tuple[Base, bool]:
+    instance = session.query(model).filter_by(**kwargs).one_or_none()
+
+    if instance is None:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.flush()
+        session.refresh(instance)
+        return instance, True
+    else:
+        return instance, False
