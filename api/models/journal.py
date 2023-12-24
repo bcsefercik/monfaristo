@@ -84,7 +84,7 @@ class CumulativeTickerHolding(TimeStampedBase):
         ):
             return False
 
-        liquid_asset = get_or_create(
+        liquid_asset, created = get_or_create(
             session,
             LiquidAsset,
             currency_id=self.ticker.market.currency_id,
