@@ -63,7 +63,7 @@ class LiquidAsset(TimeStampedBase):
     title: Mapped[Optional[str]] = mapped_column(
         String, index=True, default=None, nullable=True
     )
-    amount: Mapped[float] = mapped_column(default=0)
+    balance: Mapped[float] = mapped_column(default=0)
     currency_id: Mapped[int] = mapped_column(ForeignKey("currency.id"), index=True)
     currency: Mapped["Currency"] = relationship()
     owner_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
@@ -94,9 +94,9 @@ class LiquidAsset(TimeStampedBase):
             return False
 
         if transaction.type == LiquidAssetTransaction.Type.DEPOSIT:
-            self.amount += transaction.amount
+            self.balance += transaction.amount
         elif transaction.type == LiquidAssetTransaction.Type.WITHDRAW:
-            self.amount -= transaction.amount
+            self.balance -= transaction.amount
         else:
             raise ValueError(f"Invalid transaction type: {transaction.type}")
 

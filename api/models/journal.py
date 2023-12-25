@@ -102,8 +102,8 @@ class CumulativeTickerHolding(TimeStampedBase):
             ) / (self.count + transaction.count)
 
             # update asset
-            liquid_asset.amount -= transaction.price * transaction.count
-            liquid_asset.amount -= transaction.commission
+            liquid_asset.balance -= transaction.price * transaction.count
+            liquid_asset.balance -= transaction.commission
 
             # do following updates at the end
             self.count += transaction.count
@@ -121,8 +121,8 @@ class CumulativeTickerHolding(TimeStampedBase):
             self.realized_pnl += (transaction.price - self.avg_cost) * transaction.count
 
             # update asset
-            liquid_asset.amount += transaction.price * transaction.count
-            liquid_asset.amount -= transaction.commission
+            liquid_asset.balance += transaction.price * transaction.count
+            liquid_asset.balance -= transaction.commission
 
             # do following updates at the end
             self.count -= transaction.count
