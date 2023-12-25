@@ -1,5 +1,6 @@
 .vscode
 *.DS_Store*
+scripts/populate_transaction_data.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
