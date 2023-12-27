@@ -112,10 +112,12 @@ async def create_transaction(
     with db.begin():
         cumulative_ticker_holding = (
             db.query(CumulativeTickerHolding)
-            .filter(CumulativeTickerHolding.ticker_id == Transaction.ticker_id)
+            .filter(
+                CumulativeTickerHolding.ticker_id == candidate_transaction["ticker_id"]
+            )
             .filter(
                 CumulativeTickerHolding.investment_account_id
-                == Transaction.investment_account_id
+                == candidate_transaction["investment_account_id"]
             )
             .filter(CumulativeTickerHolding.is_completed == False)
             .first()
