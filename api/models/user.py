@@ -38,7 +38,9 @@ class User(TimeStampedBase):
     scopes: Mapped[List["UserScope"]] = relationship(
         secondary="user_has_scope", back_populates="users"
     )
-    accounts: Mapped[List["Account"]] = relationship("Account", back_populates="owner")
+    accounts: Mapped[List["InvestmentAccount"]] = relationship(
+        "InvestmentAccount", back_populates="owner"
+    )
 
 
 class UserScope(Base):
@@ -52,8 +54,8 @@ class UserScope(Base):
     )
 
 
-class Account(TimeStampedBase):
-    __tablename__ = "account"
+class InvestmentAccount(TimeStampedBase):
+    __tablename__ = "investment_account"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, index=True)

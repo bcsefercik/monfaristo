@@ -1,9 +1,10 @@
 import datetime
 import enum
+import platform
 from typing import Optional
 
 from models import Base
-from models.user import Account, User
+from models.user import InvestmentAccount, User
 from settings.database import TimeStampedBase
 from sqlalchemy import Enum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
@@ -55,31 +56,33 @@ class Ticker(Base):
     url: Mapped[Optional[str]] = mapped_column()
     logo_url: Mapped[Optional[str]] = mapped_column()
 
+    __table_args__ = (
+        UniqueConstraint("code", "market_id", name="_ticker__code_market_uc"),
+    )
 
-class LiquidAsset(TimeStampedBase):
-    __tablename__ = "liquid_asset"
+
+class LiquidAssetAccount(TimeStampedBase):
+    __tablename__ = "liquid_asset_account"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[Optional[str]] = mapped_column(
         String, index=True, default=None, nullable=True
-    )
+    )  # None means "default" account for the platform
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id"), index=True)
+    platform: Mapped[Platform] = relationship()
     balance: Mapped[float] = mapped_column(default=0)
     currency_id: Mapped[int] = mapped_column(ForeignKey("currency.id"), index=True)
     currency: Mapped["Currency"] = relationship()
     owner_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
     owner: Mapped["User"] = relationship()
-    account_id: Mapped[int] = mapped_column(
-        ForeignKey("account.id"), index=True, nullable=True, default=None
-    )  # account_id can be null for non-account assets
-    account: Mapped["Account"] = relationship()
 
     __table_args__ = (
         UniqueConstraint(
             "title",
             "currency_id",
             "owner_id",
-            "account_id",
-            name="_liquid_asset__title_currency_owner_account_uc",
+            "platform_id",
+            name="_liquid_asset__title_currency_owner_platform_uc",
         ),
     )
 
@@ -87,9 +90,9 @@ class LiquidAsset(TimeStampedBase):
         self, session: Session, transaction: "LiquidAssetTransaction"
     ) -> bool:
         if not (
-            self.currency_id == transaction.liquid_asset.currency_id
-            and self.owner_id == transaction.liquid_asset.owner_id
-            and self.account_id == transaction.liquid_asset.account_id
+            self.currency_id == transaction.liquid_asset_account.currency_id
+            and self.owner_id == transaction.liquid_asset_account.owner_id
+            and self.platform_id == transaction.liquid_asset_account.platform_id
         ):
             return False
 
@@ -113,10 +116,10 @@ class LiquidAssetTransaction(Base):
         WITHDRAW = "WITHDRAW"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    liquid_asset_id: Mapped[int] = mapped_column(
-        ForeignKey("liquid_asset.id"), index=True
+    liquid_asset_account_id: Mapped[int] = mapped_column(
+        ForeignKey("liquid_asset_account.id"), index=True
     )
-    liquid_asset: Mapped[LiquidAsset] = relationship()
+    liquid_asset_account: Mapped[LiquidAssetAccount] = relationship()
     executed_at: Mapped[datetime.datetime] = mapped_column(
         default=datetime.datetime.utcnow
     )

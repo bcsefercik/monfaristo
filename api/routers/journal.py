@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from models.common import Currency, Market, Platform, Ticker
-from models.journal import Account, CumulativeTickerHolding, Transaction
+from models.journal import CumulativeTickerHolding, InvestmentAccount, Transaction
 from models.user import User
 from passlib.context import CryptContext
 from pydantic import BaseModel, Field
@@ -25,19 +25,19 @@ router = APIRouter(
 )
 
 
-class AccountCreateModel(BaseModel):
+class InvestmentAccountCreateModel(BaseModel):
     title: str
     owner_id: int
 
 
 @router.post("/account")
 async def create_account(
-    account: AccountCreateModel,
+    investment_account: InvestmentAccountCreateModel,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
     status_code=status.HTTP_201_CREATED,
 ):
-    created_account = Account(**account.model_dump())
+    created_account = InvestmentAccount(**investment_account.model_dump())
     db.add(created_account)
     db.commit()
     db.refresh(created_account)
@@ -50,30 +50,36 @@ async def get_accounts(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Account)
+    query = db.query(InvestmentAccount)
 
     if q:
-        query = query.filter(Account.title.like(f"%{q}%"))
+        query = query.filter(InvestmentAccount.title.like(f"%{q}%"))
 
     return query.all()
 
 
-@router.get("/account/{account_id}")
+@router.get("/account/{investment_account_id}")
 async def get_currency(
-    account_id: str,
+    investment_account_id: str,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return db.query(Account).filter(Account.id == account_id).first()
+    return (
+        db.query(InvestmentAccount)
+        .filter(InvestmentAccount.id == investment_account_id)
+        .first()
+    )
 
 
-@router.delete("/account/{account_id}")
+@router.delete("/account/{investment_account_id}")
 async def deactivate_account(
-    account_id: int,
+    investment_account_id: int,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db.query(Account).filter(Account.id == account_id).update({"is_active": False})
+    db.query(InvestmentAccount).filter(
+        InvestmentAccount.id == investment_account_id
+    ).update({"is_active": False})
     db.commit()
 
 
@@ -83,7 +89,7 @@ class TransactionCreateModel(BaseModel):
     count: float = Field(gt=0)
     commission: float = Field(ge=0)
     type: Transaction.Type
-    account_id: int = Field(gt=0)
+    investment_account_id: int = Field(gt=0)
     platform_id: int = Field(gt=0)
     executed_at: datetime.datetime = Field(default=datetime.datetime.utcnow())
     executed_by_id: Optional[int] = Field(default=None)
@@ -107,7 +113,10 @@ async def create_transaction(
         cumulative_ticker_holding = (
             db.query(CumulativeTickerHolding)
             .filter(CumulativeTickerHolding.ticker_id == Transaction.ticker_id)
-            .filter(CumulativeTickerHolding.account_id == Transaction.account_id)
+            .filter(
+                CumulativeTickerHolding.investment_account_id
+                == Transaction.investment_account_id
+            )
             .filter(CumulativeTickerHolding.is_completed == False)
             .first()
         )
@@ -115,7 +124,7 @@ async def create_transaction(
         if cumulative_ticker_holding is None:
             cumulative_ticker_holding = CumulativeTickerHolding(
                 ticker_id=candidate_transaction["ticker_id"],
-                account_id=candidate_transaction["account_id"],
+                investment_account_id=candidate_transaction["investment_account_id"],
             )
             db.add(cumulative_ticker_holding)
             db.flush()
@@ -136,7 +145,7 @@ async def create_transaction(
 @router.get("/transactions")
 async def get_transactions(
     q: str | None = None,
-    account: int | None = None,
+    investment_account: int | None = None,
     executed_by: int | None = None,
     is_active: bool | None = None,
     type: str | None = None,
@@ -156,8 +165,8 @@ async def get_transactions(
             )
         )
 
-    if account:
-        query = query.filter(Transaction.account_id == account)
+    if investment_account:
+        query = query.filter(Transaction.investment_account_id == investment_account)
 
     if executed_by:
         query = query.filter(Transaction.executed_by_id == executed_by)

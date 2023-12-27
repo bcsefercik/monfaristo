@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Response, status
 from models.common import (
     Currency,
-    LiquidAsset,
+    LiquidAssetAccount,
     LiquidAssetTransaction,
     Market,
     Platform,
@@ -191,7 +191,7 @@ async def get_market(
 
 
 @router.delete("/market/{market_code}")
-async def delete_platform(
+async def delete_market(
     market_code: int,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -222,7 +222,9 @@ async def create_ticker(
 
     candidate_ticker["market_id"] = (
         db.query(Market)
-        .filter(Market.code == ticker.market_code, Market.currency_id == currency.id)
+        .filter(
+            Market.code == ticker.market_code.upper(), Market.currency_id == currency.id
+        )
         .first()
         .id
     )
@@ -256,8 +258,8 @@ async def get_tickers(
 
 @router.get("/ticker/{ticker_code}/{market_code}")
 async def get_ticker(
-    ticker_code: int,
-    market_code: int,
+    ticker_code: str,
+    market_code: str,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -286,23 +288,25 @@ async def delete_ticker(
     )
 
 
-class LiquidAssetCreateModel(BaseModel):
+class LiquidAssetAccountCreateModel(BaseModel):
     title: str = Field(null=False, empty=False)
+    platform_id: int = Field(gt=0)
     currency_id: int = Field(gt=0)
     owner_id: int = Field(gt=0)
 
 
-@router.post("/liquid_asset")
-async def create_liquid_asset(
-    liquid_asset: LiquidAssetCreateModel,
+@router.post("/liquid_asset_account")
+async def create_liquid_asset_account(
+    liquid_asset_account: LiquidAssetAccountCreateModel,
     response: Response,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    liquid_asset_dict = liquid_asset.model_dump()
-    liquid_asset_dict["account_id"] = None
+    liquid_asset_dict = liquid_asset_account.model_dump()
 
-    created_liquid_asset, created = get_or_create(db, LiquidAsset, **liquid_asset_dict)
+    created_liquid_asset, created = get_or_create(
+        db, LiquidAssetAccount, **liquid_asset_dict
+    )
 
     db.commit()
     db.refresh(created_liquid_asset)
@@ -313,7 +317,7 @@ async def create_liquid_asset(
 
 
 class LiquidAssetTransactionCreateModel(BaseModel):
-    liquid_asset_id: int = Field(gt=0)
+    liquid_asset_account_id: int = Field(gt=0)
     amount: float = Field(gt=0)
     type: LiquidAssetTransaction.Type = Field(
         default=LiquidAssetTransaction.Type.DEPOSIT
@@ -329,8 +333,11 @@ async def create_liquid_asset_transaction(
 ):
     with db.begin():
         liquid_asset = (
-            db.query(LiquidAsset)
-            .filter(LiquidAsset.id == liquid_asset_transaction.liquid_asset_id)
+            db.query(LiquidAssetAccount)
+            .filter(
+                LiquidAssetAccount.id
+                == liquid_asset_transaction.liquid_asset_account_id
+            )
             .first()
         )
 

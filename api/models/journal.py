@@ -4,8 +4,8 @@ from typing import Optional
 
 import ipdb
 from models import Base, TimeStampedBase
-from models.common import LiquidAsset, Platform, Ticker
-from models.user import Account, User
+from models.common import LiquidAssetAccount, Platform, Ticker
+from models.user import InvestmentAccount, User
 from settings.database import SessionLocal, get_db, get_or_create
 from sqlalchemy import Enum, ForeignKey, String
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
@@ -40,8 +40,10 @@ class Transaction(Base):
     count: Mapped[float] = mapped_column()
     commission: Mapped[float] = mapped_column()
     type: Mapped[Type] = mapped_column(Enum(Type), index=True)
-    account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), index=True)
-    account: Mapped[Account] = relationship()
+    investment_account_id: Mapped[int] = mapped_column(
+        ForeignKey("investment_account.id"), index=True
+    )
+    investment_account: Mapped[InvestmentAccount] = relationship()
     platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id"), index=True)
     platform: Mapped[Platform] = relationship()
     executed_at: Mapped[datetime.datetime] = mapped_column(
@@ -66,8 +68,10 @@ class CumulativeTickerHolding(TimeStampedBase):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     ticker_id: Mapped[int] = mapped_column(ForeignKey("ticker.id"), index=True)
     ticker: Mapped[Ticker] = relationship()
-    account_id: Mapped[int] = mapped_column(ForeignKey("account.id"), index=True)
-    account: Mapped["Account"] = relationship()
+    investment_account_id: Mapped[int] = mapped_column(
+        ForeignKey("investment_account.id"), index=True
+    )
+    investment_account: Mapped["InvestmentAccount"] = relationship()
     avg_cost: Mapped[float] = mapped_column(default=0)
     adjusted_avg_cost: Mapped[float] = mapped_column(default=0)
     count: Mapped[float] = mapped_column(default=0)
@@ -79,16 +83,17 @@ class CumulativeTickerHolding(TimeStampedBase):
     def add_transaction(self, session: Session, transaction: Transaction) -> bool:
         if not (
             self.ticker_id == transaction.ticker_id
-            and self.account_id == transaction.account_id
+            and self.investment_account_id == transaction.investment_account_id
         ):
             return False
 
-        liquid_asset, created = get_or_create(
+        liquid_asset_account, created = get_or_create(
             session,
-            LiquidAsset,
+            LiquidAssetAccount,
+            title=None,
             currency_id=self.ticker.market.currency_id,
-            owner_id=self.account.owner_id,
-            account_id=self.account_id,
+            owner_id=self.investment_account.owner_id,
+            platform_id=transaction.platform_id,
         )
         session.flush()
 
@@ -101,9 +106,9 @@ class CumulativeTickerHolding(TimeStampedBase):
                 + transaction.price * transaction.count
             ) / (self.count + transaction.count)
 
-            # update asset
-            liquid_asset.balance -= transaction.price * transaction.count
-            liquid_asset.balance -= transaction.commission
+            # update liquid asset account balance
+            liquid_asset_account.balance -= transaction.price * transaction.count
+            liquid_asset_account.balance -= transaction.commission
 
             # do following updates at the end
             self.count += transaction.count
@@ -120,9 +125,9 @@ class CumulativeTickerHolding(TimeStampedBase):
 
             self.realized_pnl += (transaction.price - self.avg_cost) * transaction.count
 
-            # update asset
-            liquid_asset.balance += transaction.price * transaction.count
-            liquid_asset.balance -= transaction.commission
+            # update liquid asset account balance
+            liquid_asset_account.balance += transaction.price * transaction.count
+            liquid_asset_account.balance -= transaction.commission
 
             # do following updates at the end
             self.count -= transaction.count

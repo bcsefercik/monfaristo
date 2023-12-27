@@ -33,22 +33,6 @@ ACCESS_TOKEN = response.json().get("access_token")
 
 print(f"{response.status_code}: ACCESS_TOKEN: {ACCESS_TOKEN}")
 
-
-# create accounts
-ACCOUNTS = [
-    {"title": "Long term", "owner_id": USER_ID},
-    {"title": "Short term", "owner_id": USER_ID},
-]
-
-for account in ACCOUNTS:
-    response = requests.post(
-        API_URL + "journal/account",
-        json=account,
-        headers={"Authorization": f"Bearer {ACCESS_TOKEN}"},
-    )
-    if response.ok:
-        print(f"{response.status_code}: {account['title']} created successfully")
-
 # create currencies
 CURRENCIES = [
     {"title": "Turtkish Lira", "code": "TRY", "symbol": "₺"},
@@ -132,12 +116,12 @@ MARKETS = [
     {"title": "Borsa İstanbul", "code": "BIST", "currency_code": "TRY"},
     {
         "title": "The NASDAQ Global Select Market",
-        "code": "NasdaqGS",
+        "code": "NASDAQGS",
         "currency_code": "USD",
     },
     {"title": "New York Stock Exchange", "code": "NYSE", "currency_code": "USD"},
-    {"title": "Crypto Currency Exchange", "code": "Crypto", "currency_code": "USDT"},
-    {"title": "Crypto Currency Exchange", "code": "Crypto", "currency_code": "TRY"},
+    {"title": "Crypto Currency Exchange", "code": "CRYPTO", "currency_code": "USDT"},
+    {"title": "Crypto Currency Exchange", "code": "CRYPTO", "currency_code": "TRY"},
     {"title": "Other OTC", "code": "OTC", "currency_code": "USD"},
 ]
 
@@ -163,21 +147,21 @@ TICKERS = [
     {
         "title": "Udemy, Inc.",
         "code": "UDMY",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.udemy.com/",
     },
     {
         "title": "Apple Inc.",
         "code": "AAPL",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.apple.com/",
     },
     {
         "title": "NVIDIA Corporation",
         "code": "NVDA",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.nvidia.com/",
     },
@@ -198,7 +182,7 @@ TICKERS = [
     {
         "title": "Starbucks Corporation",
         "code": "SBUX",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.starbucks.com/",
     },
@@ -233,7 +217,7 @@ TICKERS = [
     {
         "code": "NFLX",
         "title": "Netflix, Inc.",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.netflix.com/",
     },
@@ -247,7 +231,7 @@ TICKERS = [
     {
         "code": "SLDP",
         "title": "Solid Power, Inc.",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.solidpowerbattery.com/",
     },
@@ -275,21 +259,21 @@ TICKERS = [
     {
         "code": "GOOG",
         "title": "Alphabet Inc.",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://abc.xyz/",
     },
     {
         "code": "TSLA",
         "title": "Tesla, Inc.",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.tesla.com/",
     },
     {
         "code": "AMD",
         "title": "Advanced Micro Devices, Inc.",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.amd.com/",
     },
@@ -303,21 +287,21 @@ TICKERS = [
     {
         "code": "RXRX",
         "title": "Recursion Pharmaceuticals, Inc.",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.recursion.com/",
     },
     {
         "code": "ARM",
         "title": "Arm Holdings plc",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.arm.com/",
     },
     {
         "code": "PEP",
         "title": "PepsiCo, Inc.",
-        "market_code": "NasdaqGS",
+        "market_code": "NASDAQGS",
         "currency_code": "USD",
         "url": "https://www.pepsico.com/",
     },
