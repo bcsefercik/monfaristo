@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from models import TimeStampedBase
 from settings.database import Base
-from sqlalchemy import Column, Enum, ForeignKey, String, Table
+from sqlalchemy import Column, Enum, ForeignKey, String, Table, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 user_has_scope = Table(
@@ -62,3 +62,9 @@ class InvestmentAccount(TimeStampedBase):
     owner_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True)
     owner: Mapped["User"] = relationship(back_populates="accounts")
     is_active: Mapped[bool] = mapped_column(default=True, index=True)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "title", "owner_id", name="_investment_account__title_owner_uc"
+        ),
+    )

@@ -316,6 +316,30 @@ async def create_liquid_asset_account(
     return created_liquid_asset
 
 
+@router.get("/liquid_asset_account")
+async def get_liquid_asset_account(
+    platform_id: int,
+    currency_id: int,
+    owner_id: int,
+    title: str | None = None,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(LiquidAssetAccount)
+        .filter(LiquidAssetAccount.platform_id == platform_id)
+        .filter(LiquidAssetAccount.currency_id == currency_id)
+        .filter(LiquidAssetAccount.owner_id == owner_id)
+    )
+
+    if title is None:
+        query = query.filter(LiquidAssetAccount.title == title)
+    else:
+        query = query.like(f"%{title}%")
+
+    return query.first()
+
+
 class LiquidAssetTransactionCreateModel(BaseModel):
     liquid_asset_account_id: int = Field(gt=0)
     amount: float = Field(gt=0)
@@ -330,8 +354,17 @@ async def create_liquid_asset_transaction(
     liquid_asset_transaction: LiquidAssetTransactionCreateModel,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
+    status_code=status.HTTP_201_CREATED,
 ):
     with db.begin():
+        created_liquid_asset_transaction = LiquidAssetTransaction(
+            **liquid_asset_transaction.model_dump()
+        )
+
+        db.add(created_liquid_asset_transaction)
+        db.flush()
+        db.refresh(created_liquid_asset_transaction)
+
         liquid_asset = (
             db.query(LiquidAssetAccount)
             .filter(
@@ -340,17 +373,11 @@ async def create_liquid_asset_transaction(
             )
             .first()
         )
-
-        created_liquid_asset_transaction = LiquidAssetTransaction(
-            **liquid_asset_transaction.model_dump(), liquid_asset=liquid_asset
+        created_liquid_asset_transaction.liquid_asset_account.add_transaction(
+            db, created_liquid_asset_transaction
         )
 
-        db.add(created_liquid_asset_transaction)
-
-        liquid_asset.add_transaction(db, created_liquid_asset_transaction)
-
-        db.commit()
-        db.refresh(created_liquid_asset_transaction)
-        db.refresh(liquid_asset)
+    db.refresh(created_liquid_asset_transaction)
+    db.refresh(created_liquid_asset_transaction.liquid_asset_account)
 
     return created_liquid_asset_transaction

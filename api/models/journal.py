@@ -121,7 +121,7 @@ class CumulativeTickerHolding(TimeStampedBase):
             self.adjusted_avg_cost = (
                 self.count * self.adjusted_avg_cost
                 - transaction.price * transaction.count
-            ) / (self.count - transaction.count)
+            ) / max(1, (self.count - transaction.count))
 
             self.realized_pnl += (transaction.price - self.avg_cost) * transaction.count
 
