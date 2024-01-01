@@ -366,14 +366,6 @@ async def create_liquid_asset_transaction(
         db.flush()
         db.refresh(created_liquid_asset_transaction)
 
-        liquid_asset = (
-            db.query(LiquidAssetAccount)
-            .filter(
-                LiquidAssetAccount.id
-                == liquid_asset_transaction.liquid_asset_account_id
-            )
-            .first()
-        )
         created_liquid_asset_transaction.liquid_asset_account.add_transaction(
             db, created_liquid_asset_transaction
         )
