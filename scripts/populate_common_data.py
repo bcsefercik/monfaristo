@@ -236,7 +236,7 @@ TICKERS = [
         "url": "https://www.solidpowerbattery.com/",
     },
     {
-        "code": "VORB",
+        "code": "VORBQ",
         "title": "Virgin Orbit, Inc.",
         "market_code": "OTC",
         "currency_code": "USD",
@@ -318,6 +318,20 @@ TICKERS = [
         "market_code": "NYSE",
         "currency_code": "USD",
         "url": "https://www.oracle.com/",
+    },
+    {
+        "code": "BMBL",
+        "title": "Bumble Inc.",
+        "market_code": "NASDAQGS",
+        "currency_code": "USD",
+        "url": "https://bumble.com/",
+    },
+    {
+        "code": "NKE",
+        "title": "NIKE, Inc.",
+        "market_code": "NYSE",
+        "currency_code": "USD",
+        "url": "https://www.nike.com/",
     },
     {
         "code": "GLCVY",

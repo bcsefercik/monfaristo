@@ -289,7 +289,7 @@ async def delete_ticker(
 
 
 class LiquidAssetAccountCreateModel(BaseModel):
-    title: str = Field(null=False, empty=False)
+    title: str = Field(default=None, nullable=True)
     platform_id: int = Field(gt=0)
     currency_id: int = Field(gt=0)
     owner_id: int = Field(gt=0)
@@ -347,6 +347,7 @@ class LiquidAssetTransactionCreateModel(BaseModel):
         default=LiquidAssetTransaction.Type.DEPOSIT
     )
     executed_at: datetime.datetime = Field(default=datetime.datetime.utcnow)
+    description: Optional[str] = Field(default=None)
 
 
 @router.post("/liquid_asset/transaction")

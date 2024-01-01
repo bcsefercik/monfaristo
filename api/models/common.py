@@ -6,7 +6,7 @@ from typing import Optional
 from models import Base
 from models.user import InvestmentAccount, User
 from settings.database import TimeStampedBase
-from sqlalchemy import Enum, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Enum, ForeignKey, String, UniqueConstraint, desc
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 
@@ -96,7 +96,10 @@ class LiquidAssetAccount(TimeStampedBase):
         ):
             return False
 
-        if transaction.type == LiquidAssetTransaction.Type.DEPOSIT:
+        if transaction.type in (
+            LiquidAssetTransaction.Type.DEPOSIT,
+            LiquidAssetTransaction.Type.DIVIDEND,
+        ):
             self.balance += transaction.amount
         elif transaction.type == LiquidAssetTransaction.Type.WITHDRAW:
             self.balance -= transaction.amount
@@ -114,6 +117,7 @@ class LiquidAssetTransaction(Base):
     class Type(str, enum.Enum):
         DEPOSIT = "DEPOSIT"
         WITHDRAW = "WITHDRAW"
+        DIVIDEND = "DIVIDEND"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     liquid_asset_account_id: Mapped[int] = mapped_column(
@@ -125,3 +129,6 @@ class LiquidAssetTransaction(Base):
     )
     amount: Mapped[float] = mapped_column()
     type: Mapped[Type] = mapped_column(Enum(Type), index=True)
+    description: Mapped[Optional[str]] = mapped_column(
+        String, default=None, nullable=True
+    )

@@ -85,7 +85,7 @@ async def deactivate_account(
 
 class TransactionCreateModel(BaseModel):
     ticker_id: int = Field(gt=0)
-    price: float = Field(gt=0)
+    price: float = Field(ge=0)
     count: float = Field(gt=0)
     commission: float = Field(ge=0)
     type: Transaction.Type
