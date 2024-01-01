@@ -79,6 +79,12 @@ class CumulativeTickerHolding(TimeStampedBase):
     total_sells: Mapped[int] = mapped_column(default=0)
     realized_pnl: Mapped[float] = mapped_column(default=0)
     is_completed: Mapped[bool] = mapped_column(default=False, index=True)
+    first_transction_at: Mapped[datetime.datetime] = mapped_column(
+        default=datetime.datetime.utcnow
+    )
+    last_transaction_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        default=None, nullable=True
+    )
 
     def add_transaction(self, session: Session, transaction: Transaction) -> bool:
         if not (
@@ -114,6 +120,10 @@ class CumulativeTickerHolding(TimeStampedBase):
             self.count += transaction.count
             self.total_buys += transaction.count
 
+            self.first_transction_at = min(
+                self.first_transction_at, transaction.executed_at
+            )
+
         elif transaction.type == Transaction.Type.SELL:
             if transaction.count > self.count:
                 return False
@@ -135,6 +145,13 @@ class CumulativeTickerHolding(TimeStampedBase):
 
         if self.count == 0:
             self.is_completed = True
+
+            if self.last_transaction_at is None:
+                self.last_transaction_at = transaction.executed_at
+            else:
+                self.last_transaction_at = max(
+                    self.last_transaction_at, transaction.executed_at
+                )
 
         session.flush()
 
