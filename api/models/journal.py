@@ -143,6 +143,8 @@ class CumulativeTickerHolding(TimeStampedBase):
             self.count -= transaction.count
             self.total_sells += transaction.count
 
+        self.realized_pnl -= transaction.commission
+
         if self.count == 0:
             self.is_completed = True
 
