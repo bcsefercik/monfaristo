@@ -1,6 +1,6 @@
 import datetime
 import enum
-from typing import Optional
+from typing import List, Optional
 
 import ipdb
 from models import Base, TimeStampedBase
@@ -58,6 +58,12 @@ class Transaction(Base):
     )
     pattern: Mapped[Optional[str]] = mapped_column(String, default=None, nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True, index=True)
+    cumulative_ticker_holding_id: Mapped[int] = mapped_column(
+        ForeignKey("cumulative_ticker_holding.id"), index=True
+    )
+    cumulative_ticker_holding: Mapped["CumulativeTickerHolding"] = relationship(
+        back_populates="transactions"
+    )
 
 
 class CumulativeTickerHolding(TimeStampedBase):
@@ -77,13 +83,18 @@ class CumulativeTickerHolding(TimeStampedBase):
     count: Mapped[float] = mapped_column(default=0)
     total_buys: Mapped[int] = mapped_column(default=0)
     total_sells: Mapped[int] = mapped_column(default=0)
-    realized_pnl: Mapped[float] = mapped_column(default=0)
+    total_commission_cost: Mapped[float] = mapped_column(default=0)
+    total_buy_amount: Mapped[float] = mapped_column(default=0)
+    total_sell_amount: Mapped[float] = mapped_column(default=0)
     is_completed: Mapped[bool] = mapped_column(default=False, index=True)
     first_transction_at: Mapped[datetime.datetime] = mapped_column(
         default=datetime.datetime.utcnow
     )
     last_transaction_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         default=None, nullable=True
+    )
+    transactions: Mapped[List["Transaction"]] = relationship(
+        back_populates="cumulative_ticker_holding"
     )
 
     def add_transaction(self, session: Session, transaction: Transaction) -> bool:
@@ -119,6 +130,7 @@ class CumulativeTickerHolding(TimeStampedBase):
             # do following updates at the end
             self.count += transaction.count
             self.total_buys += transaction.count
+            self.total_buy_amount += transaction.price * transaction.count
 
             self.first_transction_at = min(
                 self.first_transction_at, transaction.executed_at
@@ -133,8 +145,6 @@ class CumulativeTickerHolding(TimeStampedBase):
                 - transaction.price * transaction.count
             ) / max(1, (self.count - transaction.count))
 
-            self.realized_pnl += (transaction.price - self.avg_cost) * transaction.count
-
             # update liquid asset account balance
             liquid_asset_account.balance += transaction.price * transaction.count
             liquid_asset_account.balance -= transaction.commission
@@ -142,8 +152,9 @@ class CumulativeTickerHolding(TimeStampedBase):
             # do following updates at the end
             self.count -= transaction.count
             self.total_sells += transaction.count
+            self.total_sell_amount += transaction.price * transaction.count
 
-        self.realized_pnl -= transaction.commission
+        self.total_commission_cost += transaction.commission
 
         if self.count == 0:
             self.is_completed = True

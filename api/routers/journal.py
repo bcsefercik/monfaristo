@@ -132,6 +132,10 @@ async def create_transaction(
             db.flush()
             db.refresh(cumulative_ticker_holding)
 
+        candidate_transaction[
+            "cumulative_ticker_holding_id"
+        ] = cumulative_ticker_holding.id
+
         created_transaction = Transaction(**candidate_transaction)
         db.add(created_transaction)
         db.flush()
