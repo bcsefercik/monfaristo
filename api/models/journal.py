@@ -79,7 +79,6 @@ class CumulativeTickerHolding(TimeStampedBase):
     )
     investment_account: Mapped["InvestmentAccount"] = relationship()
     avg_cost: Mapped[float] = mapped_column(default=0)
-    adjusted_avg_cost: Mapped[float] = mapped_column(default=0)
     count: Mapped[float] = mapped_column(default=0)
     total_buys: Mapped[int] = mapped_column(default=0)
     total_sells: Mapped[int] = mapped_column(default=0)
@@ -96,6 +95,21 @@ class CumulativeTickerHolding(TimeStampedBase):
     transactions: Mapped[List["Transaction"]] = relationship(
         back_populates="cumulative_ticker_holding"
     )
+
+    @property
+    def adjusted_avg_cost(self) -> float | None:
+        return (
+            (
+                (
+                    self.total_buy_amount
+                    + self.total_commission_cost
+                    - self.total_sell_amount
+                )
+                / self.count
+            )
+            if self.count > 0 and not self.is_completed
+            else None
+        )
 
     def add_transaction(self, session: Session, transaction: Transaction) -> bool:
         if not (
@@ -118,10 +132,6 @@ class CumulativeTickerHolding(TimeStampedBase):
             self.avg_cost = (
                 self.total_buys * self.avg_cost + transaction.price * transaction.count
             ) / (self.total_buys + transaction.count)
-            self.adjusted_avg_cost = (
-                self.count * self.adjusted_avg_cost
-                + transaction.price * transaction.count
-            ) / (self.count + transaction.count)
 
             # update liquid asset account balance
             liquid_asset_account.balance -= transaction.price * transaction.count
@@ -139,11 +149,6 @@ class CumulativeTickerHolding(TimeStampedBase):
         elif transaction.type == Transaction.Type.SELL:
             if transaction.count > self.count:
                 return False
-
-            self.adjusted_avg_cost = (
-                self.count * self.adjusted_avg_cost
-                - transaction.price * transaction.count
-            ) / max(1, (self.count - transaction.count))
 
             # update liquid asset account balance
             liquid_asset_account.balance += transaction.price * transaction.count
