@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.18",
+    "@headlessui/tailwindcss": "^0.2.0",
     "axios": "^1.6.5",
     "next": "14.0.4",
     "next-auth": "^4.24.5",
