@@ -42,6 +42,17 @@ class User(TimeStampedBase):
         "InvestmentAccount", back_populates="owner"
     )
 
+    _default_fields = [
+        "email",
+        "role",
+        "first_name",
+        "last_name",
+        "is_active",
+    ]
+    _hidden_fields = [
+        "hashed_password",
+    ]
+
 
 class UserScope(Base):
     __tablename__ = "user_scope"

@@ -105,13 +105,12 @@ async def create_new_user(
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
-    print(form_data)
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise token_exception()
     token_expires = timedelta(days=20)
     token = create_access_token(user.email, user.id, expires_delta=token_expires)
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer", "user": user.to_dict()}
 
 
 # Exceptions
