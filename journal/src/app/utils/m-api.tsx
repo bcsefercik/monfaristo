@@ -34,7 +34,7 @@ function withTrailingSlashCheck(req) {
     return function (url, ...rest) {
             const errorMessage = `Deprecated API call without trailing slash detected: "${url}". Fix this by adding trailing slash`;
             const parsedUrl = new URL(url, 'https://example.com');
-            if (!parsedUrl.pathname.endsWith('/')) {
+            if (parsedUrl.pathname.endsWith('/')) {
                 throw Error(errorMessage);
             }
             if (parsedUrl.pathname.includes('//')) {

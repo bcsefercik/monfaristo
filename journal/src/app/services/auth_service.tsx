@@ -1,10 +1,30 @@
-export const authenticate = (email: string, password: string): any => {
-  return {
-    token:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0cnlAdHJ5LmNvbSIsImlkIjoxLCJleHAiOjE3MDcwNzc5MTd9.u_PvPvlzd_csRyXCK3bguprlPVpEK5Ung7h7JQ_zT-8",
-    user: {
-      email,
-      password,
-    },
-  };
+import mApi from "../utils/m-api";
+
+export const authenticate =  async (email: string, password: string): any => {
+  var userInfo = undefined;
+
+  var bodyFormData = new FormData();
+  bodyFormData.append("username", email);
+  bodyFormData.append("password", password);
+
+  await mApi
+    .post("/user/token", bodyFormData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    .then((response) => {
+      userInfo = {
+        token: response.data.access_token,
+        user: {
+          email,
+          password,
+        },
+      };
+    })
+    .catch((error) => {
+      return undefined;
+    });
+
+  return userInfo;
 };
