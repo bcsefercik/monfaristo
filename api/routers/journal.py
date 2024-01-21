@@ -256,6 +256,8 @@ class CumulativeTickerHoldingsSchema(BaseModel):
     first_transaction_at: datetime.datetime
     last_transaction_at: Optional[datetime.datetime] = None
     adjusted_avg_cost: Optional[float] = None
+    pnl_amount: Optional[float] = None
+    pnl_ratio: Optional[float] = None
 
     class Config:
         from_attributes = True

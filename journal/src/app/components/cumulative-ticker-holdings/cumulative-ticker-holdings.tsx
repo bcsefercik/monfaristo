@@ -59,6 +59,10 @@ type CumulativeTickerHolding = {
   total_sell_amount: number;
   is_completed: boolean;
   adjusted_avg_cost: number;
+  pnl_amount: number;
+  pnl_ratio: number;
+  first_transaction_at: string;
+  last_transaction_at: string;
 };
 
 const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
@@ -117,6 +121,40 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
           )} ${row.ticker.market.currency.code}`,
         id: "Total Sell Amount",
       },
+      {
+        accessorFn: (row) =>
+          row.pnl_amount
+            ? `${row.pnl_amount.toLocaleString(
+                undefined,
+                DEFAULT_NUMBER_FORMAT_OPTIONS
+              )} ${row.ticker.market.currency.code}`
+            : "-",
+        id: "PnL Amount",
+      },
+      {
+        accessorFn: (row) =>
+          row.pnl_ratio
+            ? `${(row.pnl_ratio * 100).toLocaleString(
+                undefined,
+                DEFAULT_NUMBER_FORMAT_OPTIONS
+              )} %`
+            : "-",
+        id: "PnL %",
+      },
+      {
+        accessorFn: (row) =>
+          new Date(`${row.first_transaction_at}Z`).toLocaleDateString("tr-TR"),
+        id: "First Transaction At",
+      },
+      {
+        accessorFn: (row) =>
+          row.last_transaction_at
+            ? new Date(`${row.last_transaction_at}Z`).toLocaleDateString(
+                "tr-TR"
+              )
+            : "-",
+        id: "Last Transaction At",
+      },
     ],
   },
 
@@ -152,8 +190,6 @@ export default function CumulativeTickerHoldings({
   const [columns] = useState<typeof defaultColumns>(() => [...defaultColumns]);
   const [columnVisibility, setColumnVisibility] = React.useState({});
 
-  const rerender = React.useReducer(() => ({}), {})[1];
-
   const table = useReactTable({
     data: tableData,
     columns,
@@ -162,15 +198,22 @@ export default function CumulativeTickerHoldings({
     },
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
-    debugTable: true,
-    debugHeaders: true,
-    debugColumns: true,
   });
 
   useEffect(() => {
     mApi.get("/journal/cumulative_ticker_holdings").then((response) => {
       setTableData(response.data as unknown as CumulativeTickerHolding[]);
-      console.log(response.data);
+
+      let total = 0;
+      (response.data as unknown as CumulativeTickerHolding[]).forEach((element) => {
+        console.log(element.pnl_amount);
+        total += element.pnl_amount || 0;
+      });
+
+      console.log(
+        "nanemolla",
+        total.toLocaleString(),
+      );
     });
   }, [table, columns]);
   return (
@@ -259,15 +302,6 @@ export default function CumulativeTickerHoldings({
               ))}
             </TableFoot>
           </Table>
-
-          <div className="h-4" />
-          <button onClick={() => rerender()} className="border p-2">
-            Rerender
-          </button>
-          <div className="h-4" />
-          <pre>
-            {JSON.stringify(table.getState().columnVisibility, null, 2)}
-          </pre>
         </div>
       )}
     </>

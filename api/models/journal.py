@@ -1,5 +1,6 @@
 import datetime
 import enum
+from functools import cached_property
 from typing import List, Optional
 
 import ipdb
@@ -96,7 +97,7 @@ class CumulativeTickerHolding(TimeStampedBase):
         back_populates="cumulative_ticker_holding"
     )
 
-    @property
+    @cached_property
     def adjusted_avg_cost(self) -> float | None:
         return (
             (
@@ -108,6 +109,26 @@ class CumulativeTickerHolding(TimeStampedBase):
                 / self.count
             )
             if self.count > 0 and not self.is_completed
+            else None
+        )
+
+    @cached_property
+    def pnl_amount(self) -> float | None:
+        return (
+            (
+                self.total_sell_amount
+                - self.total_buy_amount
+                - self.total_commission_cost
+            )
+            if self.is_completed
+            else None
+        )
+
+    @cached_property
+    def pnl_ratio(self) -> float | None:
+        return (
+            (self.pnl_amount / (self.total_buy_amount + self.total_commission_cost))
+            if self.pnl_amount is not None
             else None
         )
 
