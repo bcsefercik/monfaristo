@@ -1,4 +1,5 @@
-import mApi from "../utils/m-api";
+import axios from "axios";
+import { API_HOST } from "../constants";
 
 export const authenticate =  async (email: string, password: string): any => {
   var userInfo = undefined;
@@ -7,8 +8,8 @@ export const authenticate =  async (email: string, password: string): any => {
   bodyFormData.append("username", email);
   bodyFormData.append("password", password);
 
-  await mApi
-    .post("/user/token", bodyFormData, {
+  await axios.
+    post(`${API_HOST}/user/token`, bodyFormData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -20,7 +21,7 @@ export const authenticate =  async (email: string, password: string): any => {
           email,
           password,
         },
-      };
+      } as any;
     })
     .catch((error) => {
       return undefined;
