@@ -200,9 +200,28 @@ async def get_transaction(
 
 class CumulativeTickerHoldingsSchema(BaseModel):
     class TickerSchema(BaseModel):
+        class MarketSchema(BaseModel):
+            class CurrencySchema(BaseModel):
+                id: int
+                title: str
+                code: str
+                symbol: str
+
+                class Config:
+                    from_attributes = True
+
+            id: int
+            title: str
+            code: str
+            currency: CurrencySchema
+
+            class Config:
+                from_attributes = True
+
         id: int
         title: str
         code: str
+        market: MarketSchema
 
         class Config:
             from_attributes = True
@@ -266,15 +285,5 @@ async def get_cumulative_ticker_holdings(
 
     if is_completed is not None:
         query = query.filter(CumulativeTickerHolding.is_completed == is_completed)
-    return query.all()
 
-    return [
-        jsonable_encoder(
-            obj.to_dict(
-                show=[
-                    "investment_account",
-                ]
-            )
-        )
-        for obj in query.all()
-    ]
+    return query.all()
