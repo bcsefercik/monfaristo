@@ -86,7 +86,7 @@ class CumulativeTickerHolding(TimeStampedBase):
     total_buy_amount: Mapped[float] = mapped_column(default=0)
     total_sell_amount: Mapped[float] = mapped_column(default=0)
     is_completed: Mapped[bool] = mapped_column(default=False, index=True)
-    first_transction_at: Mapped[datetime.datetime] = mapped_column(
+    first_transaction_at: Mapped[datetime.datetime] = mapped_column(
         default=datetime.datetime.utcnow
     )
     last_transaction_at: Mapped[Optional[datetime.datetime]] = mapped_column(
@@ -142,8 +142,8 @@ class CumulativeTickerHolding(TimeStampedBase):
             self.total_buys += transaction.count
             self.total_buy_amount += transaction.price * transaction.count
 
-            self.first_transction_at = min(
-                self.first_transction_at, transaction.executed_at
+            self.first_transaction_at = min(
+                self.first_transaction_at, transaction.executed_at
             )
 
         elif transaction.type == Transaction.Type.SELL:

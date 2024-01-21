@@ -6,6 +6,8 @@ from settings.database import engine
 
 app = FastAPI()
 
+
+# TODO: move these to env vars
 origins = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",

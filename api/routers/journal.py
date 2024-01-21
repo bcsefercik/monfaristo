@@ -1,13 +1,16 @@
 import datetime
 import sys
+from audioop import avg
 from calendar import c
 from locale import currency
 from re import M
-from typing import Optional
+from typing import List, Optional
+from urllib import response
 from venv import create
 
 import ipdb
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from models.common import Currency, Market, Platform, Ticker
@@ -193,3 +196,85 @@ async def get_transaction(
     db: Session = Depends(get_db),
 ):
     return db.query(Transaction).filter(Transaction.id == transaction_id).first()
+
+
+class CumulativeTickerHoldingsSchema(BaseModel):
+    class TickerSchema(BaseModel):
+        id: int
+        title: str
+        code: str
+
+        class Config:
+            from_attributes = True
+
+    class InvestmentAccountSchema(BaseModel):
+        class UserSchema(BaseModel):
+            id: int
+            email: str
+            first_name: str
+            last_name: str
+
+            class Config:
+                from_attributes = True
+
+        id: int
+        title: str
+        owner: UserSchema
+
+        class Config:
+            from_attributes = True
+
+    id: int
+    ticker: TickerSchema
+    investment_account: InvestmentAccountSchema
+    avg_cost: float
+    count: float
+    total_buys: float
+    total_buy_amount: float
+    total_sells: float
+    total_sell_amount: float
+    is_completed: bool
+    first_transaction_at: datetime.datetime
+    last_transaction_at: Optional[datetime.datetime] = None
+    adjusted_avg_cost: Optional[float] = None
+
+    class Config:
+        from_attributes = True
+
+
+@router.get(
+    "/cumulative_ticker_holdings",
+    response_model=List[CumulativeTickerHoldingsSchema],
+)
+async def get_cumulative_ticker_holdings(
+    investment_account_id: int | None = None,
+    ticker_id: int | None = None,
+    is_completed: bool | None = None,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+
+    query = db.query(CumulativeTickerHolding)
+
+    if investment_account_id is not None:
+        query = query.filter(
+            CumulativeTickerHolding.investment_account_id == investment_account_id
+        )
+
+    if ticker_id is not None:
+        query = query.filter(CumulativeTickerHolding.ticker_id == ticker_id)
+
+    if is_completed is not None:
+        query = query.filter(CumulativeTickerHolding.is_completed == is_completed)
+    return query.all()
+
+    return [
+        jsonable_encoder(
+            obj.to_dict(
+                show=[
+                    "investment_account",
+                ]
+            )
+        )
+        for obj in query.all()
+    ]
