@@ -5,20 +5,24 @@ from calendar import c
 from locale import currency
 from re import M
 from typing import List, Optional
-from urllib import response
-from venv import create
 
-import ipdb
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from models.common import Currency, Market, Platform, Ticker
-from models.journal import CumulativeTickerHolding, InvestmentAccount, Transaction
+from models.cumulative_ticker_holding import (
+    CumulativeTickerHolding,
+    CumulativeTickerHoldingFilter,
+    CumulativeTickerHoldingOrderingOptions,
+    CumulativeTickerHoldingRepository,
+)
+from models.journal import InvestmentAccount, Transaction
 from models.user import User
 from passlib.context import CryptContext
 from pydantic import BaseModel, Field
 from routers.auth import get_current_user
+from routers.utils import generate_ordering_dict
 from settings.database import SessionLocal, engine, get_db
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
@@ -252,6 +256,7 @@ class CumulativeTickerHoldingsSchema(BaseModel):
     total_buy_amount: float
     total_sells: float
     total_sell_amount: float
+    total_commission_cost: float
     is_completed: bool
     first_transaction_at: datetime.datetime
     last_transaction_at: Optional[datetime.datetime] = None
@@ -271,21 +276,23 @@ async def get_cumulative_ticker_holdings(
     investment_account_id: int | None = None,
     ticker_id: int | None = None,
     is_completed: bool | None = None,
+    ordering: str | None = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
 
-    query = db.query(CumulativeTickerHolding)
+    repo = CumulativeTickerHoldingRepository(db)
 
-    if investment_account_id is not None:
-        query = query.filter(
-            CumulativeTickerHolding.investment_account_id == investment_account_id
-        )
+    ordering_dict = generate_ordering_dict(
+        ordering,
+        valid_params=CumulativeTickerHoldingOrderingOptions.model_fields.keys(),
+    )
+    ordering_options = CumulativeTickerHoldingOrderingOptions(**ordering_dict)
 
-    if ticker_id is not None:
-        query = query.filter(CumulativeTickerHolding.ticker_id == ticker_id)
+    filter = CumulativeTickerHoldingFilter(
+        investment_account_id=investment_account_id,
+        ticker_id=ticker_id,
+        is_completed=is_completed,
+    )
 
-    if is_completed is not None:
-        query = query.filter(CumulativeTickerHolding.is_completed == is_completed)
-
-    return query.all()
+    return repo.get_all(filter=filter, ordering=ordering_options)
