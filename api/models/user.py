@@ -32,7 +32,7 @@ class User(TimeStampedBase):
     last_name: Mapped[Optional[str]] = mapped_column()
     is_active: Mapped[bool] = mapped_column(default=True)
     last_login_at: Mapped[datetime.datetime] = mapped_column(
-        default=datetime.datetime.utcnow
+        default=datetime.datetime.utcnow()
     )
     role: Mapped[str] = mapped_column(Enum(Type), default=Type.USER, index=True)
     scopes: Mapped[List["UserScope"]] = relationship(

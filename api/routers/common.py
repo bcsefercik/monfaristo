@@ -346,7 +346,7 @@ class LiquidAssetTransactionCreateModel(BaseModel):
     type: LiquidAssetTransaction.Type = Field(
         default=LiquidAssetTransaction.Type.DEPOSIT
     )
-    executed_at: datetime.datetime = Field(default=datetime.datetime.utcnow)
+    executed_at: datetime.datetime = Field(default=datetime.datetime.utcnow())
     description: Optional[str] = Field(default=None)
 
 

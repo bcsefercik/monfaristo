@@ -125,7 +125,7 @@ class LiquidAssetTransaction(Base):
     )
     liquid_asset_account: Mapped[LiquidAssetAccount] = relationship()
     executed_at: Mapped[datetime.datetime] = mapped_column(
-        default=datetime.datetime.utcnow
+        default=datetime.datetime.utcnow()
     )
     amount: Mapped[float] = mapped_column()
     type: Mapped[Type] = mapped_column(Enum(Type), index=True)

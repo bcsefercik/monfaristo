@@ -149,10 +149,10 @@ class TimeStampedBase(Base):
     __abstract__ = True
 
     created_at: Mapped[datetime.datetime] = mapped_column(
-        default=datetime.datetime.utcnow
+        default=datetime.datetime.utcnow()
     )
     modified_at: Mapped[datetime.datetime] = mapped_column(
-        default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
+        default=datetime.datetime.utcnow(), onupdate=datetime.datetime.utcnow()
     )
 
 
