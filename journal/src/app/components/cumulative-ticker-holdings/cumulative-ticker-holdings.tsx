@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Table,
   TableBody,
@@ -9,13 +10,14 @@ import {
   TableHeaderCell,
   TableRow,
 } from "@tremor/react";
-
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 import "./cumulative-ticker-holdings.css";
 
 import {
   ColumnDef,
+  SortingState,
   flexRender,
   getCoreRowModel,
   useReactTable,
@@ -57,6 +59,7 @@ type CumulativeTickerHolding = {
   total_sells: number;
   total_buy_amount: number;
   total_sell_amount: number;
+  total_commission_cost: number;
   is_completed: boolean;
   adjusted_avg_cost: number;
   pnl_amount: number;
@@ -68,18 +71,23 @@ type CumulativeTickerHolding = {
 const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
   {
     accessorFn: (row) => row.ticker,
-    id: "Ticker",
+    id: "ticker_code",
+    header: () => "Ticker",
     cell: (info) => (info.getValue() as any).code,
+    enableSorting: true,
+    enableMultiSort: true,
   },
   {
     accessorFn: (row) => row.ticker,
     id: "Market",
     cell: (info) => (info.getValue() as any).market.code,
+    enableSorting: false,
   },
   {
     accessorFn: (row) => row.is_completed,
     id: "Status",
     cell: (info) => (info.getValue() ? "Completed" : "Open"),
+    enableSorting: false,
   },
 
   {
@@ -92,18 +100,22 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
             DEFAULT_NUMBER_FORMAT_OPTIONS
           )} ${row.ticker.market.currency.code}`,
         id: "Avg Cost",
+        enableSorting: false,
       },
       {
         accessorFn: (row) => row.count.toFixed(2),
         id: "Count",
+        enableSorting: false,
       },
       {
         accessorFn: (row) => row.total_buys.toFixed(2),
         id: "Total Buys",
+        enableSorting: false,
       },
       {
         accessorFn: (row) => row.total_sells.toFixed(2),
         id: "Total Sells",
+        enableSorting: false,
       },
       {
         accessorFn: (row) =>
@@ -111,7 +123,10 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
             undefined,
             DEFAULT_NUMBER_FORMAT_OPTIONS
           )} ${row.ticker.market.currency.code}`,
-        id: "Total Buy Amount",
+        id: "total_buy_amount",
+        header: () => "Total Buy Amount",
+        enableSorting: true,
+        enableMultiSort: true,
       },
       {
         accessorFn: (row) =>
@@ -119,7 +134,19 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
             undefined,
             DEFAULT_NUMBER_FORMAT_OPTIONS
           )} ${row.ticker.market.currency.code}`,
-        id: "Total Sell Amount",
+        id: "total_sell_amount",
+        header: () => "Total Sell Amount",
+        enableSorting: true,
+        enableMultiSort: true,
+      },
+      {
+        accessorFn: (row) =>
+          `${row.total_commission_cost.toLocaleString(
+            undefined,
+            DEFAULT_NUMBER_FORMAT_OPTIONS
+          )} ${row.ticker.market.currency.code}`,
+        id: "Total Comm.",
+        enableSorting: false,
       },
       {
         accessorFn: (row) =>
@@ -129,7 +156,10 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
                 DEFAULT_NUMBER_FORMAT_OPTIONS
               )} ${row.ticker.market.currency.code}`
             : "-",
-        id: "PnL Amount",
+        id: "pnl_amount",
+        header: () => "PnL",
+        enableSorting: true,
+        enableMultiSort: true,
       },
       {
         accessorFn: (row) =>
@@ -139,12 +169,16 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
                 DEFAULT_NUMBER_FORMAT_OPTIONS
               )} %`
             : "-",
-        id: "PnL %",
+        id: "pnl_ratio",
+        header: () => "PnL %",
+        enableSorting: true,
+        enableMultiSort: true,
       },
       {
         accessorFn: (row) =>
           new Date(`${row.first_transaction_at}Z`).toLocaleDateString("tr-TR"),
         id: "First Transaction At",
+        enableSorting: false,
       },
       {
         accessorFn: (row) =>
@@ -154,6 +188,7 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
               )
             : "-",
         id: "Last Transaction At",
+        enableSorting: false,
       },
     ],
   },
@@ -164,14 +199,17 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
       {
         accessorFn: (row) => row.investment_account.title,
         id: "Title",
+        enableSorting: false,
       },
       {
         accessorFn: (row) => row.investment_account.owner.email,
         id: "Owner Email",
+        enableSorting: false,
       },
       {
         accessorFn: (row) => row.investment_account.owner,
         id: "Owner Name",
+        enableSorting: false,
         cell: (info) =>
           info.getValue().first_name + " " + info.getValue().last_name,
       },
@@ -188,34 +226,57 @@ export default function CumulativeTickerHoldings({
 }: CumulativeTickerHoldingsProps) {
   const [tableData, setTableData] = useState<CumulativeTickerHolding[]>([]);
   const [columns] = useState<typeof defaultColumns>(() => [...defaultColumns]);
-  const [columnVisibility, setColumnVisibility] = React.useState({});
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [sorting, setSorting] = useState<SortingState>([
+    // {
+    //   id: "Total Sells",
+    //   desc: false,
+    // },
+  ]);
 
   const table = useReactTable({
     data: tableData,
     columns,
     state: {
       columnVisibility,
+      sorting,
     },
+    onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  useEffect(() => {
-    mApi.get("/journal/cumulative_ticker_holdings").then((response) => {
-      setTableData(response.data as unknown as CumulativeTickerHolding[]);
+  const generateOrderingString = () => {
+    return sorting.map((sort) => `${sort.desc ? "-" : ""}${sort.id}`).join(",");
+  };
 
-      let total = 0;
-      (response.data as unknown as CumulativeTickerHolding[]).forEach((element) => {
-        console.log(element.pnl_amount);
-        total += element.pnl_amount || 0;
+  const fetchTableData = async () => {
+    mApi
+      .get("/journal/cumulative_ticker_holdings", {
+        params: {
+          ordering: generateOrderingString(),
+        },
+      })
+      .then((response) => {
+        setTableData(response.data as unknown as CumulativeTickerHolding[]);
+
+        // let total = 0;
+        // (response.data as unknown as CumulativeTickerHolding[]).forEach(
+        //   (element) => {
+        //     total += element.pnl_amount || 0;
+        //   }
+        // );
+
+        // console.log("nanemolla", total.toLocaleString());
       });
+  };
 
-      console.log(
-        "nanemolla",
-        total.toLocaleString(),
-      );
-    });
-  }, [table, columns]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    fetchTableData();
+  }, [sorting]);
+
   return (
     <>
       {tableData.length === 0 && <>Loading...</>}
@@ -259,12 +320,28 @@ export default function CumulativeTickerHoldings({
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableHeaderCell key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
+                      {header.isPlaceholder ? null : (
+                        <div
+                          {...{
+                            className: header.column.getCanSort()
+                              ? "cursor-pointer select-none"
+                              : "",
+
+                            onClick: () => {
+                              header.column.toggleSorting(undefined, true);
+                            },
+                          }}
+                        >
+                          {flexRender(
                             header.column.columnDef.header,
                             header.getContext()
                           )}
+                          {{
+                            asc: " ▲",
+                            desc: " ▼",
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </div>
+                      )}
                     </TableHeaderCell>
                   ))}
                 </TableRow>

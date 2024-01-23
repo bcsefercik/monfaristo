@@ -152,8 +152,8 @@ class CumulativeTickerHoldingFilter(BaseModel):
 
 
 class CumulativeTickerHoldingOrderingOptions(BaseModel):
-    id: Callable | None = None
     ticker_code: Callable | None = None
+    id: Callable | None = None
     total_buy_amount: Callable | None = None
     total_sell_amount: Callable | None = None
     pnl_amount: Callable | None = None
@@ -192,18 +192,21 @@ class CumulativeTickerHoldingRepository:
                 CumulativeTickerHolding.is_completed == filter.is_completed
             )
 
-        for opk, opv in ordering.model_dump().items():
-            if opv is None:
-                continue
-
-            if opk not in self._simple_ordering_options:
-                continue
-
-            query = query.order_by(opv(getattr(CumulativeTickerHolding, opk)))
+        orders = []
 
         if ordering.ticker_code is not None:
-            query = query.join(CumulativeTickerHolding.ticker).order_by(
-                ordering.ticker_code(Ticker.code)
-            )
+            orders.append(ordering.ticker_code(Ticker.code))
+            query = query.join(CumulativeTickerHolding.ticker)
+
+        orders.extend(
+            [
+                opv(getattr(CumulativeTickerHolding, opk))
+                for opk, opv in ordering.model_dump().items()
+                if opv is not None and opk in self._simple_ordering_options
+            ]
+        )
+
+        if orders:
+            query = query.order_by(*orders)
 
         return query.all()
