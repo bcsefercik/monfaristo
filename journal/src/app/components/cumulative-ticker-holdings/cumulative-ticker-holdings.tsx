@@ -339,7 +339,11 @@ export default function CumulativeTickerHoldings({
                           {{
                             asc: " ▲",
                             desc: " ▼",
-                          }[header.column.getIsSorted() as string] ?? null}
+                          }[
+                            header.column.getCanSort()
+                              ? (header.column.getIsSorted() as string)
+                              : "null"
+                          ] ?? null}
                         </div>
                       )}
                     </TableHeaderCell>
