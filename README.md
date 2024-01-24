@@ -1,7 +1,7 @@
 # Monfaristo 
 
 ## Phase 1: Trading Journal
-- [ ] Backend for transaction APIs
+- [x] Backend for transaction APIs
 - [ ] Frontend
 
 Currently you add transactions via API, show/filter/sort Cumulative Ticker Holdings on UI:
