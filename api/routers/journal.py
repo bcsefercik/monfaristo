@@ -275,6 +275,9 @@ class CumulativeTickerHoldingsSchema(BaseModel):
 async def get_cumulative_ticker_holdings(
     investment_account_id: int | None = None,
     ticker_id: int | None = None,
+    ticker_code: str | None = None,
+    market_id: int | None = None,
+    market_code: str | None = None,
     is_completed: bool | None = None,
     ordering: str | None = None,
     user: dict = Depends(get_current_user),
@@ -292,6 +295,9 @@ async def get_cumulative_ticker_holdings(
     filter = CumulativeTickerHoldingFilter(
         investment_account_id=investment_account_id,
         ticker_id=ticker_id,
+        ticker_code=ticker_code,
+        market_id=market_id,
+        market_code=market_code,
         is_completed=is_completed,
     )
 

@@ -5,7 +5,7 @@ from typing import Callable, List, Optional
 
 import ipdb
 from models import Base, TimeStampedBase
-from models.common import LiquidAssetAccount, Platform, Ticker
+from models.common import LiquidAssetAccount, Market, Platform, Ticker
 from models.journal import Transaction
 from models.user import InvestmentAccount, User
 from pydantic import BaseModel
@@ -147,6 +147,9 @@ class CumulativeTickerHolding(TimeStampedBase):
 
 class CumulativeTickerHoldingFilter(BaseModel):
     ticker_id: int | None = None
+    ticker_code: str | None = None
+    market_id: int | None = None
+    market_code: str | None = None
     investment_account_id: int | None = None
     is_completed: bool | None = None
 
@@ -170,6 +173,12 @@ class CumulativeTickerHoldingRepository:
             "pnl_amount",
             "pnl_ratio",
         )
+        self._simple_filters = (
+            "ticker_id",
+            "market_id",
+            "investment_account_id",
+            "is_completed",
+        )
 
     def get_all(
         self,
@@ -178,19 +187,26 @@ class CumulativeTickerHoldingRepository:
     ) -> List[CumulativeTickerHolding]:
         query = self._session.query(CumulativeTickerHolding)
 
-        if filter.investment_account_id is not None:
-            query = query.filter(
-                CumulativeTickerHolding.investment_account_id
-                == filter.investment_account_id
+        for fpk, fpv in filter.model_dump().items():
+            if fpv is not None and fpk in self._simple_filters:
+                query = query.filter(getattr(CumulativeTickerHolding, fpk) == fpv)
+
+        if filter.ticker_code is not None:
+            query = query.join(CumulativeTickerHolding.ticker).filter(
+                Ticker.code == filter.ticker_code
             )
 
-        if filter.ticker_id is not None:
-            query = query.filter(CumulativeTickerHolding.ticker_id == filter.ticker_id)
-
-        if filter.is_completed is not None:
-            query = query.filter(
-                CumulativeTickerHolding.is_completed == filter.is_completed
+        if filter.market_code is not None:
+            market = (
+                self._session.query(Market)
+                .filter(Market.code == filter.market_code)
+                .first()
             )
+
+            if market is not None:
+                query = query.join(CumulativeTickerHolding.ticker).filter(
+                    Ticker.market_id == market.id
+                )
 
         orders = []
 
