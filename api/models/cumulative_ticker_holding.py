@@ -193,13 +193,13 @@ class CumulativeTickerHoldingRepository:
 
         if filter.ticker_code is not None:
             query = query.join(CumulativeTickerHolding.ticker).filter(
-                Ticker.code == filter.ticker_code
+                Ticker.code == filter.ticker_code.upper()
             )
 
         if filter.market_code is not None:
             market = (
                 self._session.query(Market)
-                .filter(Market.code == filter.market_code)
+                .filter(Market.code == filter.market_code.upper())
                 .first()
             )
 

@@ -17,6 +17,8 @@ import "./cumulative-ticker-holdings.css";
 
 import {
   ColumnDef,
+  ColumnFiltersState,
+  FilterFn,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -24,7 +26,11 @@ import {
 } from "@tanstack/react-table";
 import { DEFAULT_NUMBER_FORMAT_OPTIONS } from "../../constants";
 import mApi from "../../utils/m-api";
-
+declare module "@tanstack/table-core" {
+  interface FilterFns {
+    fuzzy: FilterFn<unknown>;
+  }
+}
 type CumulativeTickerHolding = {
   id: number;
   ticker: {
@@ -70,24 +76,34 @@ type CumulativeTickerHolding = {
 
 const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
   {
-    accessorFn: (row) => row.ticker,
-    id: "ticker_code",
-    header: () => "Ticker",
-    cell: (info) => (info.getValue() as any).code,
-    enableSorting: true,
-    enableMultiSort: true,
-  },
-  {
-    accessorFn: (row) => row.ticker,
-    id: "Market",
-    cell: (info) => (info.getValue() as any).market.code,
-    enableSorting: false,
-  },
-  {
-    accessorFn: (row) => row.is_completed,
-    id: "Status",
-    cell: (info) => (info.getValue() ? "Completed" : "Open"),
-    enableSorting: false,
+    header: " ",
+    columns: [
+      {
+        accessorFn: (row) => row.ticker,
+        id: "ticker_code",
+        header: () => "Ticker",
+        cell: (info) => (info.getValue() as any).code,
+        enableSorting: true,
+        enableMultiSort: true,
+        enableColumnFilter: true,
+      },
+      {
+        accessorFn: (row) => row.ticker,
+        id: "market_code",
+        header: () => "Market",
+        cell: (info) => (info.getValue() as any).market.code,
+        enableSorting: false,
+        enableColumnFilter: true,
+      },
+      {
+        accessorFn: (row) => row.is_completed,
+        id: "status",
+        header: () => "Status",
+        cell: (info) => (info.getValue() ? "Completed" : "Open"),
+        enableSorting: false,
+        enableColumnFilter: true,
+      },
+    ],
   },
 
   {
@@ -99,23 +115,29 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
             undefined,
             DEFAULT_NUMBER_FORMAT_OPTIONS
           )} ${row.ticker.market.currency.code}`,
-        id: "Avg Cost",
+        id: "avg_cost",
+        header: () => "Avg Cost",
+        enableColumnFilter: false,
         enableSorting: false,
       },
       {
         accessorFn: (row) => row.count.toFixed(2),
-        id: "Count",
+        id: "count",
+        header: () => "Count",
+        enableColumnFilter: false,
         enableSorting: false,
       },
       {
         accessorFn: (row) => row.total_buys.toFixed(2),
         id: "Total Buys",
         enableSorting: false,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) => row.total_sells.toFixed(2),
         id: "Total Sells",
         enableSorting: false,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) =>
@@ -127,6 +149,7 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
         header: () => "Total Buy Amount",
         enableSorting: true,
         enableMultiSort: true,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) =>
@@ -138,6 +161,7 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
         header: () => "Total Sell Amount",
         enableSorting: true,
         enableMultiSort: true,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) =>
@@ -145,8 +169,10 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
             undefined,
             DEFAULT_NUMBER_FORMAT_OPTIONS
           )} ${row.ticker.market.currency.code}`,
-        id: "Total Comm.",
+        id: "total_commission_cost",
+        header: () => "Total Comm.",
         enableSorting: false,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) =>
@@ -160,6 +186,7 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
         header: () => "PnL",
         enableSorting: true,
         enableMultiSort: true,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) =>
@@ -173,12 +200,14 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
         header: () => "PnL %",
         enableSorting: true,
         enableMultiSort: true,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) =>
           new Date(`${row.first_transaction_at}Z`).toLocaleDateString("tr-TR"),
         id: "First Transaction At",
         enableSorting: false,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) =>
@@ -189,6 +218,7 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
             : "-",
         id: "Last Transaction At",
         enableSorting: false,
+        enableColumnFilter: false,
       },
     ],
   },
@@ -198,20 +228,26 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
     columns: [
       {
         accessorFn: (row) => row.investment_account.title,
-        id: "Title",
+        id: "account_title",
+        header: () => "Title",
         enableSorting: false,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) => row.investment_account.owner.email,
-        id: "Owner Email",
+        id: "owner_email",
+        header: () => "Owner Email",
         enableSorting: false,
+        enableColumnFilter: false,
       },
       {
         accessorFn: (row) => row.investment_account.owner,
-        id: "Owner Name",
+        id: "owner_name",
+        header: () => "Owner Name",
         enableSorting: false,
         cell: (info) =>
           info.getValue().first_name + " " + info.getValue().last_name,
+        enableColumnFilter: false,
       },
     ],
   },
@@ -226,13 +262,22 @@ export default function CumulativeTickerHoldings({
 }: CumulativeTickerHoldingsProps) {
   const [tableData, setTableData] = useState<CumulativeTickerHolding[]>([]);
   const [columns] = useState<typeof defaultColumns>(() => [...defaultColumns]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [sorting, setSorting] = useState<SortingState>([
-    // {
-    //   id: "Total Sells",
-    //   desc: false,
-    // },
-  ]);
+  const [columnVisibility, setColumnVisibility] = useState({
+    "Total Buys": false,
+    "Total Sells": false,
+    total_commission_cost: false,
+    account_title: false,
+    owner_email: false,
+    owner_name: false,
+    avg_cost: false,
+    count: false,
+  });
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [globalFilter, setGlobalFilter] = React.useState("");
 
   const table = useReactTable({
     data: tableData,
@@ -240,7 +285,13 @@ export default function CumulativeTickerHoldings({
     state: {
       columnVisibility,
       sorting,
+      columnFilters,
+      globalFilter,
     },
+    filterFns: {
+      fuzzy: undefined,
+    },
+    onColumnFiltersChange: setColumnFilters,
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
@@ -251,23 +302,32 @@ export default function CumulativeTickerHoldings({
   };
 
   const fetchTableData = async () => {
+    const filterParams = columnFilters
+      .map((f) => {
+        return [f.id.toLowerCase(), f.value];
+      })
+      .reduce((acc, [key, value]) => {
+        if (key === "status") {
+          if ((value as string).toLowerCase() === "completed") {
+            acc["is_completed"] = true;
+          } else if ((value as string).toLowerCase() === "open") {
+            acc["is_completed"] = false;
+          }
+        } else {
+          acc[key as string] = value;
+        }
+        return acc;
+      }, {} as any);
+
     mApi
       .get("/journal/cumulative_ticker_holdings", {
         params: {
           ordering: generateOrderingString(),
+          ...filterParams,
         },
       })
       .then((response) => {
         setTableData(response.data as unknown as CumulativeTickerHolding[]);
-
-        // let total = 0;
-        // (response.data as unknown as CumulativeTickerHolding[]).forEach(
-        //   (element) => {
-        //     total += element.pnl_amount || 0;
-        //   }
-        // );
-
-        // console.log("nanemolla", total.toLocaleString());
       });
   };
 
@@ -275,12 +335,11 @@ export default function CumulativeTickerHoldings({
   const searchParams = useSearchParams();
   useEffect(() => {
     fetchTableData();
-  }, [sorting]);
+  }, [sorting, columnFilters]);
 
   return (
     <>
-      {tableData.length === 0 && <>Loading...</>}
-      {tableData.length > 0 && (
+      {
         <div className="p-2">
           <div className="inline-block border border-black shadow rounded">
             <div className="px-1 border-b border-black">
@@ -346,6 +405,12 @@ export default function CumulativeTickerHoldings({
                           ] ?? null}
                         </div>
                       )}
+
+                      {header.column.getCanFilter() ? (
+                        <div>
+                          <Filter column={header.column} table={table} />
+                        </div>
+                      ) : null}
                     </TableHeaderCell>
                   ))}
                 </TableRow>
@@ -384,7 +449,64 @@ export default function CumulativeTickerHoldings({
             </TableFoot>
           </Table>
         </div>
-      )}
+      }
     </>
+  );
+}
+
+function Filter({
+  column,
+  table,
+}: {
+  column: Column<any, unknown>;
+  table: Table<any>;
+}) {
+  const columnFilterValue = column.getFilterValue();
+  return (
+    <>
+      <DebouncedInput
+        type="text"
+        value={(columnFilterValue ?? "") as string}
+        onChange={(value) => {
+          column.setFilterValue(value);
+        }}
+        placeholder={"Filter..."}
+        className="w-24 border shadow rounded"
+      />
+    </>
+  );
+}
+
+// A debounced input react component
+function DebouncedInput({
+  value: initialValue,
+  onChange,
+  debounce = 500,
+  ...props
+}: {
+  value: string | number;
+  onChange: (value: string | number) => void;
+  debounce?: number;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+  const [value, setValue] = React.useState(initialValue);
+
+  React.useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      onChange(value);
+    }, debounce);
+
+    return () => clearTimeout(timeout);
+  }, [value]);
+
+  return (
+    <input
+      {...props}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+    />
   );
 }
