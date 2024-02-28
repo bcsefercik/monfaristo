@@ -48,14 +48,7 @@ class CumulativeTickerHolding(TimeStampedBase):
     @cached_property
     def adjusted_avg_cost(self) -> float | None:
         return (
-            (
-                (
-                    self.total_buy_amount
-                    + self.total_commission_cost
-                    - self.total_sell_amount
-                )
-                / self.count
-            )
+            ((self.total_buy_amount - self.total_sell_amount) / self.count)
             if self.count > 0 and not self.is_completed
             else None
         )

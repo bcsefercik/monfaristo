@@ -121,6 +121,19 @@ const defaultColumns: ColumnDef<CumulativeTickerHolding>[] = [
         enableSorting: false,
       },
       {
+        accessorFn: (row) =>
+          row.adjusted_avg_cost === null
+            ? "-"
+            : `${row.adjusted_avg_cost.toLocaleString(
+                undefined,
+                DEFAULT_NUMBER_FORMAT_OPTIONS
+              )} ${row.ticker.market.currency.code}`,
+        id: "adjusted_avg_cost",
+        header: () => "Adj. Avg Cost",
+        enableColumnFilter: false,
+        enableSorting: false,
+      },
+      {
         accessorFn: (row) => row.count.toFixed(2),
         id: "count",
         header: () => "Count",
@@ -269,8 +282,6 @@ export default function CumulativeTickerHoldings({
     account_title: false,
     owner_email: false,
     owner_name: false,
-    avg_cost: false,
-    count: false,
   });
   const [sorting, setSorting] = useState<SortingState>([]);
 
