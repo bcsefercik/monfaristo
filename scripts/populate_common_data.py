@@ -360,6 +360,27 @@ TICKERS = [
         "currency_code": "TRY",
         "url": "https://gamerarena.com/",
     },
+    {
+        "code": "DAL",
+        "title": "Delta Air Lines, Inc.",
+        "market_code": "NYSE",
+        "currency_code": "USD",
+        "url": "https://www.delta.com/",
+    },
+    {
+        "code": "SHOP",
+        "title": "Shopify Inc.",
+        "market_code": "NYSE",
+        "currency_code": "USD",
+        "url": "https://www.shopify.com/",
+    },
+    {
+        "code": "ABNB",
+        "title": "Airbnb, Inc.",
+        "market_code": "NASDAQGS",
+        "currency_code": "USD",
+        "url": "https://www.airbnb.com/",
+    },
 ]
 
 for ticker in TICKERS:

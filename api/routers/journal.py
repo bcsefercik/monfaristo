@@ -301,4 +301,21 @@ async def get_cumulative_ticker_holdings(
         is_completed=is_completed,
     )
 
-    return repo.get_all(filter=filter, ordering=ordering_options)
+    response = repo.get_all(filter=filter, ordering=ordering_options)
+
+    # BEGIN:Reporting purposes only
+    ticker_names = list()
+    ticker_counts = list()
+    for item in response:
+        ticker_names.append(item.ticker.code)
+        item_count = str(int(item.count))
+        if item.ticker.code == "UDMY":
+            item_count = f"({item_count}+)"
+        ticker_counts.append(item_count)
+
+    print(", ".join(ticker_names))
+    print(f'={"*+".join(ticker_counts)}')
+
+    # END:Reporting purposes only
+
+    return response
