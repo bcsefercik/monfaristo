@@ -47,7 +47,7 @@ async def create_currency(
 
 @router.get("/currencies")
 async def get_currencies(
-    q: str | None = None,
+    q: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -101,7 +101,7 @@ async def create_platform(
 
 @router.get("/platforms")
 async def get_platforms(
-    q: str | None = None,
+    q: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -167,7 +167,7 @@ async def create_market(
 
 @router.get("/markets")
 async def get_markets(
-    q: str | None = None,
+    q: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -242,7 +242,7 @@ async def create_ticker(
 
 @router.get("/tickers")
 async def get_tickers(
-    q: str | None = None,
+    q: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -321,7 +321,7 @@ async def get_liquid_asset_account(
     platform_id: int,
     currency_id: int,
     owner_id: int,
-    title: str | None = None,
+    title: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

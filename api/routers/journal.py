@@ -53,7 +53,7 @@ async def create_account(
 
 @router.get("/accounts")
 async def get_accounts(
-    q: str | None = None,
+    q: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -157,11 +157,11 @@ async def create_transaction(
 
 @router.get("/transactions")
 async def get_transactions(
-    q: str | None = None,
-    investment_account: int | None = None,
-    executed_by: int | None = None,
-    is_active: bool | None = None,
-    type: str | None = None,
+    q: Optional[str] = None,
+    investment_account: Optional[int] = None,
+    executed_by: Optional[int] = None,
+    is_active: Optional[bool] = None,
+    type: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -273,17 +273,16 @@ class CumulativeTickerHoldingsSchema(BaseModel):
     response_model=List[CumulativeTickerHoldingsSchema],
 )
 async def get_cumulative_ticker_holdings(
-    investment_account_id: int | None = None,
-    ticker_id: int | None = None,
-    ticker_code: str | None = None,
-    market_id: int | None = None,
-    market_code: str | None = None,
-    is_completed: bool | None = None,
-    ordering: str | None = None,
+    investment_account_id: Optional[int] = None,
+    ticker_id: Optional[int] = None,
+    ticker_code: Optional[str] = None,
+    market_id: Optional[int] = None,
+    market_code: Optional[str] = None,
+    is_completed: Optional[bool] = None,
+    ordering: Optional[str] = None,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-
     repo = CumulativeTickerHoldingRepository(db)
 
     ordering_dict = generate_ordering_dict(

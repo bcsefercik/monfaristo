@@ -46,7 +46,7 @@ class CumulativeTickerHolding(TimeStampedBase):
     )
 
     @cached_property
-    def adjusted_avg_cost(self) -> float | None:
+    def adjusted_avg_cost(self) -> Optional[float]:
         return (
             ((self.total_buy_amount - self.total_sell_amount) / self.count)
             if self.count > 0 and not self.is_completed
@@ -54,7 +54,7 @@ class CumulativeTickerHolding(TimeStampedBase):
         )
 
     @hybrid_property
-    def pnl_amount(self) -> float | None:
+    def pnl_amount(self) -> Optional[float]:
         return (
             (
                 self.total_sell_amount
@@ -66,7 +66,7 @@ class CumulativeTickerHolding(TimeStampedBase):
         )
 
     @hybrid_property
-    def pnl_ratio(self) -> float | None:
+    def pnl_ratio(self) -> Optional[float]:
         return (
             (self.pnl_amount / (self.total_buy_amount + self.total_commission_cost))
             if self.pnl_amount is not None
@@ -139,21 +139,21 @@ class CumulativeTickerHolding(TimeStampedBase):
 
 
 class CumulativeTickerHoldingFilter(BaseModel):
-    ticker_id: int | None = None
-    ticker_code: str | None = None
-    market_id: int | None = None
-    market_code: str | None = None
-    investment_account_id: int | None = None
-    is_completed: bool | None = None
+    ticker_id: Optional[int] = None
+    ticker_code: Optional[str] = None
+    market_id: Optional[int] = None
+    market_code: Optional[str] = None
+    investment_account_id: Optional[int] = None
+    is_completed: Optional[bool] = None
 
 
 class CumulativeTickerHoldingOrderingOptions(BaseModel):
-    ticker_code: Callable | None = None
-    id: Callable | None = None
-    total_buy_amount: Callable | None = None
-    total_sell_amount: Callable | None = None
-    pnl_amount: Callable | None = None
-    pnl_ratio: Callable | None = None
+    ticker_code: Optional[Callable] = None
+    id: Optional[Callable] = None
+    total_buy_amount: Optional[Callable] = None
+    total_sell_amount: Optional[Callable] = None
+    pnl_amount: Optional[Callable] = None
+    pnl_ratio: Optional[Callable] = None
 
 
 class CumulativeTickerHoldingRepository:

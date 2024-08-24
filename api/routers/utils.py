@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import asc, desc
 
 
-def generate_ordering_dict(param: str, valid_params: List[str] | None = None):
+def generate_ordering_dict(param: str, valid_params: Optional[List[str]] = None):
     if not param:
         return {}
 
