@@ -1,0 +1,29 @@
+services:
+  api_service:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    image: api_service
+    container_name: api_service
+    volumes:
+      - ./api/db/:/service/api_service/db/
+    ports:
+      - 3000:3000
+    network_mode: host
+    restart: on-failure
+
+  journal_ui:
+    build:
+      context: .
+      dockerfile: ./journal/Dockerfile
+    image: journal_ui
+    container_name: journal_ui
+    ports:
+      - 3000:3000
+    network_mode: host
+    # depends_on:
+    #   - api_service
+    restart: on-failure
+    env_file:
+      - path: ./journal/default.env
+        required: true
