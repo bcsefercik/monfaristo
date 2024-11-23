@@ -303,6 +303,10 @@ async def get_cumulative_ticker_holdings(
     response = repo.get_all(filter=filter, ordering=ordering_options)
 
     # BEGIN:Reporting purposes only
+    yo = {
+        "NKE": 3,
+        "F": 30,
+    }
     ticker_names = list()
     ticker_counts = list()
     for item in response:
@@ -310,6 +314,8 @@ async def get_cumulative_ticker_holdings(
         item_count = str(int(item.count))
         if item.ticker.code == "UDMY":
             item_count = f"({item_count}+)"
+        if item.ticker.code in yo:
+            item_count = f"({item_count}-{yo[item.ticker.code]})"
         ticker_counts.append(item_count)
 
     print(", ".join(ticker_names))

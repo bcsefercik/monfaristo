@@ -381,6 +381,13 @@ TICKERS = [
         "currency_code": "USD",
         "url": "https://www.airbnb.com/",
     },
+    {
+        "code": "ONON",
+        "title": "On Holding AG",
+        "market_code": "NYSE",
+        "currency_code": "USD",
+        "url": "https://www.on-running.com/",
+    },
 ]
 
 for ticker in TICKERS:

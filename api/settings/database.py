@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 from sqlalchemy.orm.attributes import QueryableAttribute
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///../db/db.sqlite3"
+SQLALCHEMY_DATABASE_URL = "sqlite:///db/db.sqlite3"
 
 # MYSQL Series
 # SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:test1234!@127.0.0.1:3306/todoapp"
